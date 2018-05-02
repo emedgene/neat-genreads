@@ -4,7 +4,7 @@ class CigarString:
 	def __init__(self, stringIn=None, listIn=None):
 
 		if stringIn == None and listIn == None:
-			print '\nError: CigarString object not initialized.\n'
+			print('\nError: CigarString object not initialized.\n')
 			exit(1)
 
 		self.cigarData = []
@@ -22,7 +22,7 @@ class CigarString:
 		letters = re.split(r"\d+",s)[1:]
 		numbers = [int(n) for n in re.findall(r"\d+",s)]
 		dReserve = 0
-		for i in xrange(len(letters)):
+		for i in range(len(letters)):
 			if letters[i] == 'D':
 				dReserve = numbers[i]
 			if letters[i] == 'M' or letters[i] == 'I':
@@ -41,7 +41,7 @@ class CigarString:
 		currentCount = 1
 		if 'D' in currentSym:
 			currentSym   = currentSym[-1]
-		for k in xrange(1,len(l)):
+		for k in range(1,len(l)):
 			nextSym = l[k]
 			if len(nextSym) == 1 and nextSym == currentSym:
 				currentCount += 1
@@ -69,7 +69,7 @@ class CigarString:
 	def joinCigar(self, j_stringIn=None, j_listIn=None):
 
 		if j_stringIn == None and j_listIn == None:
-			print '\nError: Invalid join operation in CigarString\n'
+			print('\nError: Invalid join operation in CigarString\n')
 			exit(1)
 
 		if j_stringIn != None:
@@ -82,11 +82,11 @@ class CigarString:
 	def insertCigarElement(self, pos, i_stringIn=None, i_listIn=None):
 
 		if i_stringIn == None and i_listIn == None:
-			print '\nError: Invalid insertion operation in CigarString\n'
+			print('\nError: Invalid insertion operation in CigarString\n')
 			exit(1)
 
 		if pos < 0 or pos >= len(self.cigarData):
-			print '\nError: Invalid insertion position in CigarString\n'
+			print('\nError: Invalid insertion position in CigarString\n')
 			exit(1)
 
 		if i_stringIn != None:
@@ -97,12 +97,12 @@ class CigarString:
 
 
 if __name__ == '__main__':
-	print 'testing CigarString class...'
+	print('testing CigarString class...')
 
 	str1 = '50M10D7I23M'
 	str2 = '10I25M'
 	iPos = 20
 	myCigar  = CigarString(stringIn=str1)
 	myCigar.insertCigarElement(iPos,i_stringIn=str2)
-	print str1,'+',str2,'[inserted at position',str(iPos)+']','=',myCigar.getString()
+	print(str1,'+',str2,'[inserted at position',str(iPos)+']','=',myCigar.getString())
 

@@ -17,7 +17,7 @@ import gzip
 import random
 import numpy as np
 import argparse
-import cPickle as pickle
+import pickle as pickle
 
 # absolute path to this script
 SIM_PATH = '/'.join(os.path.realpath(__file__).split('/')[:-2])+'/py/'
@@ -26,16 +26,16 @@ sys.path.append(SIM_PATH)
 from probability		import DiscreteDistribution
 
 def parseFQ(inf):
-	print 'reading '+inf+'...'
+	print('reading '+inf+'...')
 	if inf[-3:] == '.gz':
-		print 'detected gzip suffix...'
+		print('detected gzip suffix...')
 		f = gzip.open(inf,'r')
 	else:
 		f = open(inf,'r')
 
 	IS_SAM = False
 	if inf[-4:] == '.sam':
-		print 'detected sam input...'
+		print('detected sam input...')
 		IS_SAM = True
 
 	rRead  = 0
@@ -64,16 +64,16 @@ def parseFQ(inf):
 			if inf[-3:] != '.gz' and not IS_SAM:
 				totalSize = os.path.getsize(inf)
 				entrySize = sum([len(n) for n in [data1,data2,data3,data4]])
-				print 'estimated number of reads in file:',int(float(totalSize)/entrySize)
+				print('estimated number of reads in file:',int(float(totalSize)/entrySize))
 			actual_readlen = len(data4)-1
-			print 'assuming read length is uniform...'
-			print 'detected read length (from first read found):',actual_readlen
+			print('assuming read length is uniform...')
+			print('detected read length (from first read found):',actual_readlen)
 			priorQ = np.zeros([actual_readlen,RQ])
-			totalQ = [None] + [np.zeros([RQ,RQ]) for n in xrange(actual_readlen-1)]
+			totalQ = [None] + [np.zeros([RQ,RQ]) for n in range(actual_readlen-1)]
 
 		# sanity-check readlengths
 		if len(data4)-1 != actual_readlen:
-			print 'skipping read with unexpected length...'
+			print('skipping read with unexpected length...')
 			continue
 
 		for i in range(len(data4)-1):
@@ -88,7 +88,7 @@ def parseFQ(inf):
 
 		rRead += 1
 		if rRead%PRINT_EVERY == 0:
-			print rRead
+			print(rRead)
 		if MAX_READS > 0 and rRead >= MAX_READS:
 			break
 	f.close()
@@ -96,28 +96,28 @@ def parseFQ(inf):
 	# some sanity checking again...
 	QRANGE = [min(qDict.keys()),max(qDict.keys())]
 	if QRANGE[0] < 0:
-		print '\nError: Read in Q-scores below 0\n'
+		print('\nError: Read in Q-scores below 0\n')
 		exit(1)
 	if QRANGE[1] > RQ:
-		print '\nError: Read in Q-scores above specified maximum:',QRANGE[1],'>',RQ,'\n'
+		print('\nError: Read in Q-scores above specified maximum:',QRANGE[1],'>',RQ,'\n')
 		exit(1)
 
-	print 'computing probabilities...'
-	probQ  = [None] + [[[0. for m in xrange(RQ)] for n in xrange(RQ)] for p in xrange(actual_readlen-1)]
-	for p in xrange(1,actual_readlen):
-		for i in xrange(RQ):
+	print('computing probabilities...')
+	probQ  = [None] + [[[0. for m in range(RQ)] for n in range(RQ)] for p in range(actual_readlen-1)]
+	for p in range(1,actual_readlen):
+		for i in range(RQ):
 			rowSum = float(np.sum(totalQ[p][i,:]))+PROB_SMOOTH*RQ
 			if rowSum <= 0.:
 				continue
-			for j in xrange(RQ):
+			for j in range(RQ):
 				probQ[p][i][j] = (totalQ[p][i][j]+PROB_SMOOTH)/rowSum
 
-	initQ  = [[0. for m in xrange(RQ)] for n in xrange(actual_readlen)]
-	for i in xrange(actual_readlen):
+	initQ  = [[0. for m in range(RQ)] for n in range(actual_readlen)]
+	for i in range(actual_readlen):
 		rowSum = float(np.sum(priorQ[i,:]))+INIT_SMOOTH*RQ
 		if rowSum <= 0.:
 			continue
-		for j in xrange(RQ):
+		for j in range(RQ):
 			initQ[i][j] = (priorQ[i][j]+INIT_SMOOTH)/rowSum
 
 	if PLOT_STUFF:
@@ -125,11 +125,11 @@ def parseFQ(inf):
 
 		mpl.figure(1)
 		Z = np.array(initQ).T
-		X, Y = np.meshgrid( range(0,len(Z[0])+1), range(0,len(Z)+1) )
+		X, Y = np.meshgrid( list(range(0,len(Z[0])+1)), list(range(0,len(Z)+1)) )
 		mpl.pcolormesh(X,Y,Z,vmin=0.,vmax=0.25)
 		mpl.axis([0,len(Z[0]),0,len(Z)])
-		mpl.yticks(range(0,len(Z),10),range(0,len(Z),10))
-		mpl.xticks(range(0,len(Z[0]),10),range(0,len(Z[0]),10))
+		mpl.yticks(list(range(0,len(Z),10)),list(range(0,len(Z),10)))
+		mpl.xticks(list(range(0,len(Z[0]),10)),list(range(0,len(Z[0]),10)))
 		mpl.xlabel('Read Position')
 		mpl.ylabel('Quality Score')
 		mpl.title('Q-Score Prior Probabilities')
@@ -140,14 +140,14 @@ def parseFQ(inf):
 		VMIN_LOG = [-4,0]
 		minVal   = 10**VMIN_LOG[0]
 		qLabels  = [str(n) for n in range(QRANGE[0],QRANGE[1]+1) if n%5==0]
-		print qLabels
+		print(qLabels)
 		qTicksx  = [int(n)+0.5 for n in qLabels]
 		qTicksy  = [(RQ-int(n))-0.5 for n in qLabels]
 
-		for p in xrange(1,actual_readlen,10):
+		for p in range(1,actual_readlen,10):
 			currentDat = np.array(probQ[p])
-			for i in xrange(len(currentDat)):
-				for j in xrange(len(currentDat[i])):
+			for i in range(len(currentDat)):
+				for j in range(len(currentDat[i])):
 					currentDat[i][j] = max(minVal,currentDat[i][j])
 
 			# matrix indices:		pcolormesh plotting:	plot labels and axes:
@@ -168,7 +168,7 @@ def parseFQ(inf):
 
 			mpl.figure(p+1)
 			Z = np.log10(currentDat)
-			X, Y = np.meshgrid( range(0,len(Z[0])+1), range(0,len(Z)+1) )
+			X, Y = np.meshgrid( list(range(0,len(Z[0])+1)), list(range(0,len(Z)+1)) )
 			mpl.pcolormesh(X,Y,Z[::-1,:],vmin=VMIN_LOG[0],vmax=VMIN_LOG[1],cmap='jet')
 			mpl.xlim([QRANGE[0],QRANGE[1]+1])
 			mpl.ylim([RQ-QRANGE[1]-1,RQ-QRANGE[0]])
@@ -184,16 +184,16 @@ def parseFQ(inf):
 		#mpl.tight_layout()
 		mpl.show()
 
-	print 'estimating average error rate via simulation...'
-	Qscores = range(RQ)
+	print('estimating average error rate via simulation...')
+	Qscores = list(range(RQ))
 	#print (len(initQ), len(initQ[0]))
 	#print (len(probQ), len(probQ[1]), len(probQ[1][0]))
 
-	initDistByPos        = [DiscreteDistribution(initQ[i],Qscores) for i in xrange(len(initQ))]
+	initDistByPos        = [DiscreteDistribution(initQ[i],Qscores) for i in range(len(initQ))]
 	probDistByPosByPrevQ = [None]
-	for i in xrange(1,len(initQ)):
+	for i in range(1,len(initQ)):
 		probDistByPosByPrevQ.append([])
-		for j in xrange(len(initQ[0])):
+		for j in range(len(initQ[0])):
 			if np.sum(probQ[i][j]) <= 0.:	# if we don't have sufficient data for a transition, use the previous qscore
 				probDistByPosByPrevQ[-1].append(DiscreteDistribution([1],[Qscores[j]],degenerateVal=Qscores[j]))
 			else:
@@ -202,12 +202,12 @@ def parseFQ(inf):
 	countDict = {}
 	for q in Qscores:
 		countDict[q] = 0
-	for samp in xrange(1,N_SAMP+1):
+	for samp in range(1,N_SAMP+1):
 		if samp%PRINT_EVERY == 0:
-			print samp
+			print(samp)
 		myQ = initDistByPos[0].sample()
 		countDict[myQ] += 1
-		for i in xrange(1,len(initQ)):
+		for i in range(1,len(initQ)):
 			myQ = probDistByPosByPrevQ[i][myQ].sample()
 			countDict[myQ] += 1
 
@@ -217,7 +217,7 @@ def parseFQ(inf):
 		eVal = 10.**(-k/10.)
 		#print k, eVal, countDict[k]
 		avgError += eVal * (countDict[k]/totBases)
-	print 'AVG ERROR RATE:',avgError
+	print('AVG ERROR RATE:',avgError)
 
 	return (initQ, probQ, avgError)
 
@@ -243,12 +243,12 @@ PROB_SMOOTH = 0.
 PRINT_EVERY = 10000
 PLOT_STUFF  = args.plot
 if PLOT_STUFF:
-	print 'plotting is desired, lets import matplotlib...'
+	print('plotting is desired, lets import matplotlib...')
 	import matplotlib.pyplot as mpl
 
 def main():
 
-	Qscores = range(RQ)
+	Qscores = list(range(RQ))
 	if INF2 == None:
 		(initQ, probQ, avgError) = parseFQ(INF)
 	else:
@@ -261,7 +261,7 @@ def main():
 	#
 	if PILEUP == None:
 
-		print 'Using default sequencing error parameters...'
+		print('Using default sequencing error parameters...')
 
 		# sequencing substitution transition probabilities
 		SSE_PROB   = [[0.,     0.4918, 0.3377, 0.1705 ],
@@ -282,7 +282,7 @@ def main():
 	#	otherwise we need to parse a pileup and compute statistics!
 	#
 	else:
-		print '\nPileup parsing coming soon!\n'
+		print('\nPileup parsing coming soon!\n')
 		exit(1)
 
 	errorParams  = [SSE_PROB, SIE_RATE, SIE_PROB, SIE_VAL, SIE_INS_FREQ, SIE_INS_NUCL]
@@ -290,7 +290,7 @@ def main():
 	#
 	#	finally, let's save our output model
 	#
-	print 'saving model...'
+	print('saving model...')
 	if INF2 == None:
 		pickle.dump([initQ,probQ,Qscores,offQ,avgError,errorParams],open(OUF,'wb'))
 	else:

@@ -36,15 +36,15 @@ def catListOfFiles(l,outName,gzipped=False):
 	if gzipped:
 		for n in l:
 			if not n[-3:] == '.gz' and not n[-5:] == '.gzip':
-				print '\nError: Found a mixture of compressed and decompressed files with the specified prefix. Abandoning ship...\n'
+				print('\nError: Found a mixture of compressed and decompressed files with the specified prefix. Abandoning ship...\n')
 				for m in l:
-					print m
-				print ''
+					print(m)
+				print('')
 				exit(1)
 		cmd = 'cat '+' '.join(sorted(l))+' > '+outName+'.gz'
 	else:
 		cmd = 'cat '+' '.join(sorted(l))+' > '+outName
-	print cmd
+	print(cmd)
 	os.system(cmd)
 
 def catBams(l,outName,samtools_exe):
@@ -52,7 +52,7 @@ def catBams(l,outName,samtools_exe):
 	tmp = outName+'.tempHeader.sam'
 	os.system(samtools_exe+' view -H '+l_sort[0]+' > '+tmp)
 	cmd = samtools_exe+' cat -h '+tmp+' '+' '.join(l_sort)+' > '+outName
-	print cmd
+	print(cmd)
 	os.system(cmd)
 	os.system('rm '+tmp)
 

@@ -14,8 +14,8 @@ def get4lines(fn):
 	l3 = fn.readline().strip()
 	l4 = fn.readline().strip()
 	if any([l1,l2,l3,l4]) and not all([l1,l2,l3,l4]):
-		print '\nError: missing lines:\n'
-		print l1+'\n'+l2+'\n'+l3+'\n'+l4+'\n'
+		print('\nError: missing lines:\n')
+		print(l1+'\n'+l2+'\n'+l3+'\n'+l4+'\n')
 		exit(1)
 	return (l1,l2,l3,l4)
 
@@ -39,12 +39,12 @@ def validate4lines(l1,l2,l3,l4):
 		if n not in ALLOWED_QUAL:
 			failed = 4
 	if failed:
-		print '\nError: malformed lines:'
-		if failed == 1: print ' ---- invalid delimiters\n'
-		elif failed == 2: print ' ---- seq len != qual len\n'
-		elif failed == 3: print ' ---- seq contains invalid characters\n'
-		elif failed == 4: print ' ---- qual contains invalid characters\n'
-		print l1+'\n'+l2+'\n'+l3+'\n'+l4+'\n'
+		print('\nError: malformed lines:')
+		if failed == 1: print(' ---- invalid delimiters\n')
+		elif failed == 2: print(' ---- seq len != qual len\n')
+		elif failed == 3: print(' ---- seq contains invalid characters\n')
+		elif failed == 4: print(' ---- qual contains invalid characters\n')
+		print(l1+'\n'+l2+'\n'+l3+'\n'+l4+'\n')
 		exit(1)
 
 f1 = open(sys.argv[1],'r')
@@ -61,8 +61,8 @@ while l1_r1:
 		validate4lines(l1_r2,l2_r2,l3_r2,l4_r2)
 		# make sure seq id is same for r1/r2
 		if l1_r1[:-1] != l1_r2[:-1]:
-			print '\nError: mismatched r1/r2 name:\n'
-			print l1_r1+'\n'+l1_r2+'\n'
+			print('\nError: mismatched r1/r2 name:\n')
+			print(l1_r1+'\n'+l1_r2+'\n')
 			exit(1)
 
 	# grab next 4 lines...
@@ -74,5 +74,5 @@ if f2 != None:
 	f2.close()
 f1.close()
 
-print '\nPASSED WITH FLYING COLORS. GOOD DAY.\n'
+print('\nPASSED WITH FLYING COLORS. GOOD DAY.\n')
 

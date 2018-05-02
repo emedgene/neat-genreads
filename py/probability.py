@@ -9,7 +9,7 @@ LOW_PROB_THRESH = 1e-12
 def mean_ind_of_weighted_list(l):
 	myMid = sum(l)/2.0
 	mySum = 0.0
-	for i in xrange(len(l)):
+	for i in range(len(l)):
 		mySum += l[i]
 		if mySum >= myMid:
 			return i
@@ -19,7 +19,7 @@ class DiscreteDistribution:
 
 		# some sanity checking
 		if not len(weights) or not len(values):
-			print '\nError: weight or value vector given to DiscreteDistribution() are 0-length.\n'
+			print('\nError: weight or value vector given to DiscreteDistribution() are 0-length.\n')
 			exit(1)
 
 		self.method  = method
@@ -32,7 +32,7 @@ class DiscreteDistribution:
 			self.weights = [n/sumWeight for n in weights]
 			self.values  = copy.deepcopy(values)
 			if len(self.values) != len(self.weights):
-				print '\nError: length and weights and values vectors must be the same.\n'
+				print('\nError: length and weights and values vectors must be the same.\n')
 				exit(1)
 			self.degenerate = degenerateVal
 			# prune values with probability too low to be worth using [DOESN'T REALLY IMPROVE PERFORMANCE]
@@ -121,14 +121,14 @@ def quantize_list(l):
 	if len(ls) == 0:
 		return None
 	qi = []
-	for i in xrange(QUANT_BLOCKS):
+	for i in range(QUANT_BLOCKS):
 		#qi.append(ls[int((i)*(len(ls)/float(QUANT_BLOCKS)))])
 		qi.append(ls[0]+(i/float(QUANT_BLOCKS))*(ls[-1]-ls[0]))
 	qi.append(1e12)
 	runningList = []
 	prevBi = None
 	previ  = None
-	for i in xrange(len(l)):
+	for i in range(len(l)):
 		if l[i] >= MIN_PROB*suml:
 			bi = bisect.bisect(qi,l[i])
 			#print i, l[i], qi[bi-1]

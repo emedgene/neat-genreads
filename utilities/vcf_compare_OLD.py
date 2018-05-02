@@ -84,19 +84,19 @@ else:
 	MIN_READLEN = int(MIN_READLEN)
 
 if REFERENCE == None:
-	print 'Error: No reference provided.'
+	print('Error: No reference provided.')
 	exit(1)
 if GOLDEN_VCF == None:
-	print 'Error: No golden VCF provided.'
+	print('Error: No golden VCF provided.')
 	exit(1)
 if WORKFLOW_VCF == None:
-	print 'Error: No workflow VCF provided.'
+	print('Error: No workflow VCF provided.')
 	exit(1)
 if OUT_PREFIX == None:
-	print 'Error: No output prefix provided.'
+	print('Error: No output prefix provided.')
 	exit(1)
 if (BEDFILE != None and MINREGIONLEN == None) or (BEDFILE == None and MINREGIONLEN != None):
-	print 'Error: Both -t and -T must be specified'
+	print('Error: Both -t and -T must be specified')
 	exit(1)
 
 if NO_PLOT == False:
@@ -203,7 +203,7 @@ def parseVCF(VCF_FILENAME,refName,targRegionsFl,outFile,outBool):
 	for line in open(VCF_FILENAME,'r'):
 		if line[0] != '#':
 			if len(colDict) == 0:
-				print '\n\nError: VCF has no header?\n'+VCF_FILENAME+'\n\n'
+				print('\n\nError: VCF has no header?\n'+VCF_FILENAME+'\n\n')
 				exit(1)
 			splt = line[:-1].split('\t')
 			if splt[0] == refName:
@@ -227,13 +227,13 @@ def parseVCF(VCF_FILENAME,refName,targRegionsFl,outFile,outBool):
 							if vpos in v_posHash:
 								if len(aa) == 0:
 									aa = [var[2]]
-								aa.extend([n[2] for n in v_Hashed.keys() if n[0] == vpos])
+								aa.extend([n[2] for n in list(v_Hashed.keys()) if n[0] == vpos])
 								var_merged += 1
 							v_posHash[vpos] = 1
 							
 							if len(aa):
 								allVars = [(var[0],var[1],n) for n in aa]
-								for i in xrange(len(allVars)):
+								for i in range(len(allVars)):
 									v_Hashed[allVars[i]] = 1
 									#if allVars[i] not in v_Alts:
 									#	v_Alts[allVars[i]] = []
@@ -257,7 +257,7 @@ def parseVCF(VCF_FILENAME,refName,targRegionsFl,outFile,outBool):
 		else:
 			if line[1] != '#':
 				cols = line[1:-1].split('\t')
-				for i in xrange(len(cols)):
+				for i in range(len(cols)):
 					if 'FORMAT' in colDict:
 						colSamp.append(i)
 					colDict[cols[i]] = i
@@ -282,14 +282,14 @@ def condenseByPos(listIn):
 		if indCount[n] > 1:
 			nonUniqueDict[n] = []
 	delList = []
-	for i in xrange(len(varListOfInterest)):
+	for i in range(len(varListOfInterest)):
 		if varListOfInterest[i][0] in nonUniqueDict:
 			nonUniqueDict[varListOfInterest[i][0]].append(varListOfInterest[i])
 			delList.append(i)
 	delList = sorted(delList,reverse=True)
 	for di in delList:
 		del varListOfInterest[di]
-	for v in nonUniqueDict.values():
+	for v in list(nonUniqueDict.values()):
 		var = (v[0][0],v[0][1],','.join([n[2] for n in v[::-1]]))
 		varListOfInterest.append(var)
 	return varListOfInterest
@@ -317,7 +317,7 @@ def main():
 				ref_inds.append( (prevR, prevP, f.tell()-len(data)) )
 			prevP = f.tell()
 			prevR = data[1:-1]
-	print '{0:.3f} (sec)'.format(time.time()-tt)
+	print('{0:.3f} (sec)'.format(time.time()-tt))
 	#ref_inds = [('chrM', 6, 16909), ('chr1', 16915, 254252549), ('chr2', 254252555, 502315916), ('chr3', 502315922, 704298801), ('chr4', 704298807, 899276169), ('chr5', 899276175, 1083809741), ('chr6', 1083809747, 1258347116), ('chr7', 1258347122, 1420668559), ('chr8', 1420668565, 1569959868), ('chr9', 1569959874, 1713997574), ('chr10', 1713997581, 1852243023), ('chr11', 1852243030, 1989949677), ('chr12', 1989949684, 2126478617), ('chr13', 2126478624, 2243951900), ('chr14', 2243951907, 2353448438), ('chr15', 2353448445, 2458030465), ('chr16', 2458030472, 2550192321), ('chr17', 2550192328, 2633011443), ('chr18', 2633011450, 2712650243), ('chr19', 2712650250, 2772961813), ('chr20', 2772961820, 2837247851), ('chr21', 2837247858, 2886340351), ('chr22', 2886340358, 2938671016), ('chrX', 2938671022, 3097046994), ('chrY', 3097047000, 3157608038)]
 
 	ztV = 0	# total golden variants
@@ -356,7 +356,7 @@ def main():
 				if len(relevantRegions):
 					myTrack = [0]*(relevantRegions[-1][1]+100)
 					for r in relevantRegions:
-						for ri in xrange(r[0],r[1]):
+						for ri in range(r[0],r[1]):
 							myTrack[ri] = 1
 					mappability_tracks[prevRef] = [n for n in myTrack]
 				#
@@ -369,7 +369,7 @@ def main():
 		if len(relevantRegions):
 			myTrack = [0]*(relevantRegions[-1][1]+100)
 			for r in relevantRegions:
-				for ri in xrange(r[0],r[1]):
+				for ri in range(r[0],r[1]):
 					myTrack[ri] = 1
 			mappability_tracks[prevRef] = [n for n in myTrack]
 		#
@@ -407,22 +407,22 @@ def main():
 		refName = n_RI[0]
 		if FAST == False:
 			f.seek(n_RI[1])
-			print 'reading '+refName+'...',
+			print('reading '+refName+'...', end=' ')
 			myDat  = f.read(n_RI[2]-n_RI[1]).split('\n')
 			myLen  = sum([len(m) for m in myDat])
 			if sys.version_info >= (2,7):
-				print '{:,} bp'.format(myLen)
+				print('{:,} bp'.format(myLen))
 			else:
-				print '{0:} bp'.format(myLen)
+				print('{0:} bp'.format(myLen))
 			inWidth = len(myDat[0])
 			if len(myDat[-1]) == 0:	# if last line is empty, remove it.
 				del myDat[-1]
 			if inWidth*(len(myDat)-1)+len(myDat[-1]) != myLen:
-				print 'fasta column-width not consistent.'
-				print myLen, inWidth*(len(myDat)-1)+len(myDat[-1])
-				for i in xrange(len(myDat)):
+				print('fasta column-width not consistent.')
+				print(myLen, inWidth*(len(myDat)-1)+len(myDat[-1]))
+				for i in range(len(myDat)):
 					if len(myDat[i]) != inWidth:
-						print i, len(myDat[i]), inWidth
+						print(i, len(myDat[i]), inWidth)
 				exit(1)
 
 			myDat = bytearray(''.join(myDat)).upper()
@@ -462,12 +462,12 @@ def main():
 		#	Deduce which variants are FP / FN
 		#
 		solvedInds = {}
-		for var in correctHashed.keys():
+		for var in list(correctHashed.keys()):
 			if var in workflowHashed or var[0] in solvedInds:
 				correctHashed[var]  = 2
 				workflowHashed[var] = 2
 				solvedInds[var[0]] = True
-		for var in correctHashed.keys()+workflowHashed.keys():
+		for var in list(correctHashed.keys())+list(workflowHashed.keys()):
 			if var[0] in solvedInds:
 				correctHashed[var]  = 2
 				workflowHashed[var] = 2
@@ -494,7 +494,7 @@ def main():
 		if totalGoldenVariants == 0:
 			zfP += len(FPvariants)
 			ztW += totalWorkflowVariants
-			print '{0:.3f} (sec)'.format(time.time()-tt)
+			print('{0:.3f} (sec)'.format(time.time()-tt))
 			continue
 
 		#
@@ -504,7 +504,7 @@ def main():
 			delList_i = []
 			delList_j = []
 			regionsToCheck = []
-			for i in xrange(len(FPvariants)):
+			for i in range(len(FPvariants)):
 				pos = FPvariants[i][0]
 				regionsToCheck.append((max([pos-EV_BPRANGE-1,0]),min([pos+EV_BPRANGE,len(myDat)-1])))
 
@@ -512,7 +512,7 @@ def main():
 				refSection = myDat[n[0]:n[1]]
 
 				fpWithin = []
-				for i in xrange(len(FPvariants)):
+				for i in range(len(FPvariants)):
 					m  = FPvariants[i]
 					if (m[0] > n[0] and m[0] < n[1]):
 						fpWithin.append((m,i))
@@ -527,7 +527,7 @@ def main():
 					adj += la-lr
 
 				nfWithin = []
-				for j in xrange(len(notFound)):
+				for j in range(len(notFound)):
 					m = notFound[j]
 					if (m[0] > n[0] and m[0] < n[1]):
 						nfWithin.append((m,j))
@@ -575,7 +575,7 @@ def main():
 		#
 
 		venn_data = [[0,0,0] for n in notFound]		# [i] = (unmappable, low cov, low het)
-		for i in xrange(len(notFound)):
+		for i in range(len(notFound)):
 			var = notFound[i]
 
 			noReason = True
@@ -616,7 +616,7 @@ def main():
 			if noReason:
 				venn_data[i][2] += 1
 
-		for i in xrange(len(notFound)):
+		for i in range(len(notFound)):
 			if venn_data[i][0]: set1.append(i+varAdj)
 			if venn_data[i][1]: set2.append(i+varAdj)
 			if venn_data[i][2]: set3.append(i+varAdj)
@@ -643,15 +643,15 @@ def main():
 						if var in FPvariants:
 							vcfo3.write(line)
 
-		print '{0:.3f} (sec)'.format(time.time()-tt)
+		print('{0:.3f} (sec)'.format(time.time()-tt))
 
 	#
 	#	close vcf output
 	#
-	print ''
+	print('')
 	if VCF_OUT:
-		print OUT_PREFIX+'_FN.vcf'
-		print OUT_PREFIX+'_FP.vcf'
+		print(OUT_PREFIX+'_FN.vcf')
+		print(OUT_PREFIX+'_FP.vcf')
 		vcfo2.close()
 		vcfo3.close()
 
@@ -684,34 +684,34 @@ def main():
 		mpl.figtext(0.5,0.03,tstr2,fontdict={'size':14,'weight':'bold'},horizontalalignment='center')
 
 		ouf = OUT_PREFIX+'_FNvenn.pdf'
-		print ouf
+		print(ouf)
 		mpl.savefig(ouf)
 
 	#
 	#	spit out results to console
 	#
-	print '\n**********************************\n'
+	print('\n**********************************\n')
 	if BEDFILE != None:
-		print 'ONLY CONSIDERING VARIANTS FOUND WITHIN TARGETED REGIONS\n\n'
-	print 'Total Golden Variants:  ',ztV,'\t[',zgF,'filtered,',zgM,'merged,',zgR,'redundant ]'
-	print 'Total Workflow Variants:',ztW,'\t[',zwF,'filtered,',zwM,'merged,',zwR,'redundant ]'
-	print ''
+		print('ONLY CONSIDERING VARIANTS FOUND WITHIN TARGETED REGIONS\n\n')
+	print('Total Golden Variants:  ',ztV,'\t[',zgF,'filtered,',zgM,'merged,',zgR,'redundant ]')
+	print('Total Workflow Variants:',ztW,'\t[',zwF,'filtered,',zwM,'merged,',zwR,'redundant ]')
+	print('')
 	if ztV > 0 and ztW > 0:
-		print 'Perfect Matches:',znP,'({0:.2f}%)'.format(100.*float(znP)/ztV)
-		print 'FN variants:    ',znF,'({0:.2f}%)'.format(100.*float(znF)/ztV)
-		print 'FP variants:    ',zfP#,'({0:.2f}%)'.format(100.*float(zfP)/ztW)
+		print('Perfect Matches:',znP,'({0:.2f}%)'.format(100.*float(znP)/ztV))
+		print('FN variants:    ',znF,'({0:.2f}%)'.format(100.*float(znF)/ztV))
+		print('FP variants:    ',zfP)#,'({0:.2f}%)'.format(100.*float(zfP)/ztW)
 	if FAST == False:
-		print '\nNumber of equivalent variants denoted differently between the two vcfs:',znE
+		print('\nNumber of equivalent variants denoted differently between the two vcfs:',znE)
 	if BEDFILE != None:
-		print '\nNumber of golden variants located in targeted regions that were too small to be sampled from:',zbM
+		print('\nNumber of golden variants located in targeted regions that were too small to be sampled from:',zbM)
 	if FAST:
-		print "\nWarning! Running with '--fast' means that identical variants denoted differently between the two vcfs will not be detected! The values above may be lower than the true accuracy."
+		print("\nWarning! Running with '--fast' means that identical variants denoted differently between the two vcfs will not be detected! The values above may be lower than the true accuracy.")
 	#if NO_PLOT:
 	if True:
-		print '\n#unmappable:  ',len(set1)
-		print '#low_coverage:',len(set2)
-		print '#unknown:     ',len(set3)
-	print '\n**********************************\n'
+		print('\n#unmappable:  ',len(set1))
+		print('#low_coverage:',len(set2))
+		print('#unknown:     ',len(set3))
+	print('\n**********************************\n')
 
 
 

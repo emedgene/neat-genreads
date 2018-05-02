@@ -144,7 +144,7 @@ for fn in INP:
 	DATA_DICT = pickle.load( open( fn, "rb" ) )
 	TRINUC_MUT_PROB = DATA_DICT['TRINUC_MUT_PROB']
 
-	x  = range(colorInd-1,len(TRINUC_MUT_PROB)*N_FILES,N_FILES)
+	x  = list(range(colorInd-1,len(TRINUC_MUT_PROB)*N_FILES,N_FILES))
 	xt = sorted(TRINUC_MUT_PROB.keys())
 	y  = [TRINUC_MUT_PROB[k] for k in xt]
 	markerline, stemlines, baseline = mpl.stem(x,y,'-.')
@@ -173,9 +173,9 @@ for fn in INP:
 	TRINUC_TRANS_PROBS = DATA_DICT['TRINUC_TRANS_PROBS']
 
 	xt2 = [m[3] for m in sorted([(n[0],n[2],n[1],n) for n in xt])]
-	reverse_dict = {xt2[i]:i for i in xrange(len(xt2))}
+	reverse_dict = {xt2[i]:i for i in range(len(xt2))}
 	Z = np.zeros((64,64))
-	L = [['' for n in xrange(64)] for m in xrange(64)]
+	L = [['' for n in range(64)] for m in range(64)]
 	for k in TRINUC_TRANS_PROBS:
 		i = reverse_dict[k[0]]
 		j = reverse_dict[k[1]]
@@ -186,10 +186,10 @@ for fn in INP:
 	                   'G_A','G_C','G_G','G_T',
 	                   'T_A','T_C','T_G','T_T']
 
-	for pi in xrange(16):
+	for pi in range(16):
 		mpl.subplot(4,4,pi+1)
 		Z2 = Z[pi*4:(pi+1)*4,pi*4:(pi+1)*4]
-		X, Y = np.meshgrid( range(0,len(Z2[0])+1), range(0,len(Z2)+1) )
+		X, Y = np.meshgrid( list(range(0,len(Z2[0])+1)), list(range(0,len(Z2)+1)) )
 		im = mpl.pcolormesh(X,Y,Z2[::-1,:],vmin=0.0,vmax=0.5)
 		mpl.axis([0,4,0,4])
 		mpl.xticks([0.5,1.5,2.5,3.5],['A','C','G','T'])
@@ -227,25 +227,25 @@ for fn in INP:
 	colorInd += 1
 
 bp_overlap_count = [[0 for m in INP] for n in INP]
-for i in xrange(N_FILES):
+for i in range(N_FILES):
 	bp_overlap_count[i][i] = bp_total_byFile[i]
-	for j in xrange(i+1,N_FILES):
-		for k in track_byFile_byChr[i].keys():
+	for j in range(i+1,N_FILES):
+		for k in list(track_byFile_byChr[i].keys()):
 			if k in track_byFile_byChr[j]:
-				for ii in xrange(len(track_byFile_byChr[i][k][::2])):
+				for ii in range(len(track_byFile_byChr[i][k][::2])):
 					bp_overlap_count[i][j] += getBedOverlap(track_byFile_byChr[j][k],track_byFile_byChr[i][k][ii*2],track_byFile_byChr[i][k][ii*2+1])
 
-print ''				
-print 'HIGH_MUT_REGION OVERLAP BETWEEN '+str(N_FILES)+' MODELS...'
-for i in xrange(N_FILES):
-	for j in xrange(i,N_FILES):
+print('')				
+print('HIGH_MUT_REGION OVERLAP BETWEEN '+str(N_FILES)+' MODELS...')
+for i in range(N_FILES):
+	for j in range(i,N_FILES):
 		nDissimilar = (bp_overlap_count[i][i]-bp_overlap_count[i][j]) + (bp_overlap_count[j][j]-bp_overlap_count[i][j])
 		if bp_overlap_count[i][j] == 0:
 			percentageV = 0.0
 		else:
 			percentageV = bp_overlap_count[i][j]/float(bp_overlap_count[i][j]+nDissimilar)
-		print 'overlap['+str(i)+','+str(j)+'] = '+str(bp_overlap_count[i][j])+' bp ({0:.3f}%)'.format(percentageV*100.)
-print ''
+		print('overlap['+str(i)+','+str(j)+'] = '+str(bp_overlap_count[i][j])+' bp ({0:.3f}%)'.format(percentageV*100.))
+print('')
 
 #################################################
 #
@@ -261,18 +261,18 @@ for fn in INP:
 		setofVars[colorInd].add(n)
 	colorInd += 1
 
-print ''
-print 'COMMON_VARIANTS OVERLAP BETWEEN '+str(N_FILES)+' MODELS...'
-for i in xrange(N_FILES):
-	for j in xrange(i,N_FILES):
+print('')
+print('COMMON_VARIANTS OVERLAP BETWEEN '+str(N_FILES)+' MODELS...')
+for i in range(N_FILES):
+	for j in range(i,N_FILES):
 		overlapCount = len(setofVars[i].intersection(setofVars[j]))
 		nDissimilar  = (len(setofVars[i])-overlapCount) + (len(setofVars[j])-overlapCount)
 		if overlapCount == 0:
 			percentageV = 0.0
 		else:
 			percentageV = overlapCount/float(overlapCount+nDissimilar)
-		print 'overlap['+str(i)+','+str(j)+'] = '+str(overlapCount)+' variants ({0:.3f}%)'.format(percentageV*100.)
-print ''
+		print('overlap['+str(i)+','+str(j)+'] = '+str(overlapCount)+' variants ({0:.3f}%)'.format(percentageV*100.))
+print('')
 
 
 

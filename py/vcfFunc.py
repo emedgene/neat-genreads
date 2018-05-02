@@ -61,8 +61,8 @@ def parseLine(splt,colDict,colSamp):
 			fmt = ':'+splt[colDict['FORMAT']]+':'
 			if ':GT:' in fmt:
 				gtInd = fmt.split(':').index('GT')
-				gt_perSamp = [splt[colSamp[iii]].split(':')[gtInd-1] for iii in xrange(len(colSamp))]
-				for i in xrange(len(gt_perSamp)):
+				gt_perSamp = [splt[colSamp[iii]].split(':')[gtInd-1] for iii in range(len(colSamp))]
+				for i in range(len(gt_perSamp)):
 					gt_perSamp[i] = gt_perSamp[i].replace('.','0')
 		if gt_perSamp == None:
 			gt_perSamp = [None]*max([len(colSamp),1])
@@ -74,7 +74,7 @@ def parseLine(splt,colDict,colSamp):
 def parseVCF(vcfPath,tumorNormal=False,ploidy=2):
 
 	tt = time.time()
-	print '--------------------------------'
+	print('--------------------------------')
 	sys.stdout.write('reading input VCF...\n')
 	sys.stdout.flush()
 	
@@ -90,7 +90,7 @@ def parseVCF(vcfPath,tumorNormal=False,ploidy=2):
 
 		if line[0] != '#':
 			if len(colDict) == 0:
-				print '\n\nERROR: VCF has no header?\n'+VCF_FILENAME+'\n\n'
+				print('\n\nERROR: VCF has no header?\n'+VCF_FILENAME+'\n\n')
 				f.close()
 				exit(1)
 			splt = line[:-1].split('\t')
@@ -108,9 +108,9 @@ def parseVCF(vcfPath,tumorNormal=False,ploidy=2):
 				if None in gtEval:
 					if CHOOSE_RANDOM_PLOID_IF_NO_GT_FOUND:
 						if not alreadyPrintedWarning:
-							print 'Warning: Found variants without a GT field, assuming heterozygous...'
+							print('Warning: Found variants without a GT field, assuming heterozygous...')
 							alreadyPrintedWarning = True
-						for i in xrange(len(gtEval)):
+						for i in range(len(gtEval)):
 							tmp = ['0']*ploidy
 							tmp[random.randint(0,ploidy-1)] = '1'
 							gtEval[i] = '/'.join(tmp)
@@ -147,7 +147,7 @@ def parseVCF(vcfPath,tumorNormal=False,ploidy=2):
 		else:
 			if line[1] != '#':
 				cols = line[1:-1].split('\t')
-				for i in xrange(len(cols)):
+				for i in range(len(cols)):
 					if 'FORMAT' in colDict:
 						colSamp.append(i)
 					colDict[cols[i]] = i
@@ -156,26 +156,26 @@ def parseVCF(vcfPath,tumorNormal=False,ploidy=2):
 					if len(colSamp) == 1:
 						pass
 					elif len(colSamp) == 2 and tumorNormal:
-						print 'Detected 2 sample columns in input VCF, assuming tumor/normal.'
+						print('Detected 2 sample columns in input VCF, assuming tumor/normal.')
 					else:
-						print 'Warning: Multiple sample columns present in input VCF. By default genReads uses only the first column.'
+						print('Warning: Multiple sample columns present in input VCF. By default genReads uses only the first column.')
 				else:
 					sampNames = ['Unknown']
 				if tumorNormal:
 					#tumorInd  = sampNames.index('TUMOR')
 					#normalInd = sampNames.index('NORMAL')
 					if 'NORMAL' not in sampNames or 'TUMOR' not in sampNames:
-						print '\n\nERROR: Input VCF must have a "NORMAL" and "TUMOR" column.\n'
+						print('\n\nERROR: Input VCF must have a "NORMAL" and "TUMOR" column.\n')
 	f.close()
 
 	varsOut = {}
-	for r in allVars.keys():
+	for r in list(allVars.keys()):
 		varsOut[r] = [allVars[r][k] for k in sorted(allVars[r].keys())]
 	
-	print 'found',sum([len(n) for n in allVars.values()]),'valid variants in input vcf.'
-	print ' *',nSkipped,'variants skipped: (qual filtered / ref genotypes / invalid syntax)'
-	print ' *',nSkipped_becauseHash,'variants skipped due to multiple variants found per position'
-	print '--------------------------------'
+	print('found',sum([len(n) for n in list(allVars.values())]),'valid variants in input vcf.')
+	print(' *',nSkipped,'variants skipped: (qual filtered / ref genotypes / invalid syntax)')
+	print(' *',nSkipped_becauseHash,'variants skipped due to multiple variants found per position')
+	print('--------------------------------')
 	return (sampNames, varsOut)
 
 

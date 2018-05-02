@@ -156,14 +156,14 @@ class OutputFileWriter:
 				my_tlen = -pos_0 - len(seq) + next_pos
 
 		encodedCig = ''
-		for i in xrange(cig_ops):
+		for i in range(cig_ops):
 			encodedCig += pack('<I',(cig_numbers[i]<<4) + CIGAR_PACKED[cig_letters[i]])
 		encodedSeq = ''
 		encodedLen = (len(seq)+1)/2
 		seqLen     = len(seq)
 		if seqLen&1:
 			seq += '='
-		for i in xrange(encodedLen):
+		for i in range(encodedLen):
 			encodedSeq += pack('<B',(SEQ_PACKED[seq[2*i]]<<4) + SEQ_PACKED[seq[2*i+1]])
 
 		# apparently samtools automatically adds 33 to the quality score string...
@@ -219,7 +219,7 @@ class OutputFileWriter:
 					self.bam_buffer = []
 				else:
 					ind_to_stop_at = 0
-					for i in xrange(0,len(bam_data)):
+					for i in range(0,len(bam_data)):
 						# if we are from previous reference, or have coordinates lower than next window position, it's safe to write out to file
 						if bam_data[i][0] != bam_data[-1][0] or bam_data[i][1] < bamMax:
 							ind_to_stop_at = i+1

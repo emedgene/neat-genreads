@@ -3,7 +3,7 @@ import copy
 import re
 import os
 import bisect
-import cPickle as pickle
+import pickle as pickle
 import numpy as np
 
 from probability import DiscreteDistribution, poisson_list, quantize_list
@@ -16,8 +16,8 @@ NUCL    = ['A','C','G','T']
 TRI_IND = {'AA':0,  'AC':1,  'AG':2,   'AT':3,  'CA':4,  'CC':5,  'CG':6,  'CT':7,
            'GA':8,  'GC':9,  'GG':10,  'GT':11, 'TA':12, 'TC':13, 'TG':14, 'TT':15}
 NUC_IND = {'A':0, 'C':1, 'G':2, 'T':3}
-ALL_TRI = [NUCL[i]+NUCL[j]+NUCL[k] for i in xrange(len(NUCL)) for j in xrange(len(NUCL)) for k in xrange(len(NUCL))]
-ALL_IND = {ALL_TRI[i]:i for i in xrange(len(ALL_TRI))}
+ALL_TRI = [NUCL[i]+NUCL[j]+NUCL[k] for i in range(len(NUCL)) for j in range(len(NUCL)) for k in range(len(NUCL))]
+ALL_IND = {ALL_TRI[i]:i for i in range(len(ALL_TRI))}
 
 # DEBUG
 IGNORE_TRINUC = False
@@ -47,23 +47,23 @@ class SequenceContainer:
 		self.x         = xOffset
 		self.ploidy    = ploidy
 		self.readLen   = readLen
-		self.sequences = [bytearray(sequence) for n in xrange(self.ploidy)]
+		self.sequences = [bytearray(sequence) for n in range(self.ploidy)]
 		self.seqLen    = len(sequence)
-		self.indelList = [[] for n in xrange(self.ploidy)]
-		self.snpList   = [[] for n in xrange(self.ploidy)]
-		self.allCigar  = [[] for n in xrange(self.ploidy)]
-		self.FM_pos    = [[] for n in xrange(self.ploidy)]
-		self.FM_span   = [[] for n in xrange(self.ploidy)]
-		self.adj       = [None for n in xrange(self.ploidy)]
+		self.indelList = [[] for n in range(self.ploidy)]
+		self.snpList   = [[] for n in range(self.ploidy)]
+		self.allCigar  = [[] for n in range(self.ploidy)]
+		self.FM_pos    = [[] for n in range(self.ploidy)]
+		self.FM_span   = [[] for n in range(self.ploidy)]
+		self.adj       = [None for n in range(self.ploidy)]
 		# blackList[ploid][pos] = 0		safe to insert variant here
 		# blackList[ploid][pos] = 1		indel inserted here
 		# blackList[ploid][pos] = 2		snp inserted here
 		# blackList[ploid][pos] = 3		invalid position for various processing reasons
-		self.blackList = [np.zeros(self.seqLen,dtype='<i4') for n in xrange(self.ploidy)]
+		self.blackList = [np.zeros(self.seqLen,dtype='<i4') for n in range(self.ploidy)]
 
 		# disallow mutations to occur on window overlap points
 		self.winBuffer = windowOverlap
-		for p in xrange(self.ploidy):
+		for p in range(self.ploidy):
 			self.blackList[p][-self.winBuffer]   = 3
 			self.blackList[p][-self.winBuffer-1] = 3
 
@@ -75,7 +75,7 @@ class SequenceContainer:
 			trCov_vals = [[] for n in self.sequences]
 			self.coverage_distribution = []
 			avg_out = []
-			for i in xrange(len(self.sequences)):
+			for i in range(len(self.sequences)):
 				# compute gc-bias
 				j = 0
 				while j+self.windowSize < len(self.sequences[i]):
@@ -87,7 +87,7 @@ class SequenceContainer:
 				#
 				trCov_vals[i].append(targetCov_vals[0])
 				prevVal = self.FM_pos[i][0]
-				for j in xrange(1,len(self.sequences[i])-self.readLen):
+				for j in range(1,len(self.sequences[i])-self.readLen):
 					if self.FM_pos[i][j] == None:
 						trCov_vals[i].append(targetCov_vals[prevVal])
 					else:
@@ -100,20 +100,20 @@ class SequenceContainer:
 				trCov_vals[i].extend([0.0]*(len(self.sequences[i])-len(trCov_vals[i])))
 
 				#
-				covvec = np.cumsum([trCov_vals[i][nnn]*gcCov_vals[i][nnn] for nnn in xrange(len(trCov_vals[i]))])
+				covvec = np.cumsum([trCov_vals[i][nnn]*gcCov_vals[i][nnn] for nnn in range(len(trCov_vals[i]))])
 				coverage_vals = []
-				for j in xrange(0,len(self.sequences[i])-self.readLen):
+				for j in range(0,len(self.sequences[i])-self.readLen):
 					coverage_vals.append(covvec[j+self.readLen] - covvec[j])
 				avg_out.append(np.mean(coverage_vals)/float(self.readLen))
 
 				if fragDist == None:
-					self.coverage_distribution.append(DiscreteDistribution(coverage_vals,range(len(coverage_vals))))
+					self.coverage_distribution.append(DiscreteDistribution(coverage_vals,list(range(len(coverage_vals)))))
 			
 				# fragment length nightmare
 				else:
 					currentThresh = 0.
 					index_list    = [0]
-					for j in xrange(len(fragDist.cumP)):
+					for j in range(len(fragDist.cumP)):
 						if fragDist.cumP[j] >= currentThresh + COV_FRAGLEN_PERCENTILE/100.0:
 							currentThresh = fragDist.cumP[j]
 							index_list.append(j)
@@ -137,7 +137,7 @@ class SequenceContainer:
 							if self.fraglens_indMap[j] == flv and j > buffer_val:
 								buffer_val = j
 						coverage_vals = []
-						for j in xrange(len(self.sequences[i])-buffer_val):
+						for j in range(len(self.sequences[i])-buffer_val):
 							coverage_vals.append(covvec[j+self.readLen] - covvec[j] + covvec[j+flv] - covvec[j+flv-self.readLen])
 
 						# EXPERIMENTAL
@@ -154,17 +154,17 @@ class SequenceContainer:
 						#mpl.show()
 						#exit(1)
 
-						self.coverage_distribution[i][flv] = DiscreteDistribution(coverage_vals,range(len(coverage_vals)))
+						self.coverage_distribution[i][flv] = DiscreteDistribution(coverage_vals,list(range(len(coverage_vals))))
 
 			return np.mean(avg_out)
 
 	def init_mutModels(self,mutationModels,mutRate):
 		if mutationModels == []:
-			ml = [copy.deepcopy(DEFAULT_MODEL_1) for n in xrange(self.ploidy)]
+			ml = [copy.deepcopy(DEFAULT_MODEL_1) for n in range(self.ploidy)]
 			self.modelData = ml[:self.ploidy]
 		else:
 			if len(mutationModels) != self.ploidy:
-				print '\nError: Number of mutation models recieved is not equal to specified ploidy\n'
+				print('\nError: Number of mutation models recieved is not equal to specified ploidy\n')
 				exit(1)
 			self.modelData = copy.deepcopy(mutationModels)
 
@@ -178,7 +178,7 @@ class SequenceContainer:
 
 		# how are mutations spread to each ploid, based on their specified mut rates?
 		self.ploidMutFrac  = [float(n[0])/mutRateSum for n in self.modelData]
-		self.ploidMutPrior = DiscreteDistribution(self.ploidMutFrac,range(self.ploidy))
+		self.ploidMutPrior = DiscreteDistribution(self.ploidMutFrac,list(range(self.ploidy)))
 
 		# init mutation models
 		#
@@ -201,23 +201,23 @@ class SequenceContainer:
 			self.models[-1].append([m for m in n[9]])
 
 	def init_poisson(self):
-		ind_l_list = [self.seqLen*self.models[i][0]*self.models[i][2]*self.ploidMutFrac[i] for i in xrange(len(self.models))]
-		snp_l_list = [self.seqLen*self.models[i][0]*(1.-self.models[i][2])*self.ploidMutFrac[i] for i in xrange(len(self.models))]
-		k_range    = range(int(self.seqLen*MAX_MUTFRAC))
-		self.ind_pois = [poisson_list(k_range,ind_l_list[n]) for n in xrange(len(self.models))]
-		self.snp_pois = [poisson_list(k_range,snp_l_list[n]) for n in xrange(len(self.models))]
+		ind_l_list = [self.seqLen*self.models[i][0]*self.models[i][2]*self.ploidMutFrac[i] for i in range(len(self.models))]
+		snp_l_list = [self.seqLen*self.models[i][0]*(1.-self.models[i][2])*self.ploidMutFrac[i] for i in range(len(self.models))]
+		k_range    = list(range(int(self.seqLen*MAX_MUTFRAC)))
+		self.ind_pois = [poisson_list(k_range,ind_l_list[n]) for n in range(len(self.models))]
+		self.snp_pois = [poisson_list(k_range,snp_l_list[n]) for n in range(len(self.models))]
 
 	def init_trinucBias(self):
 		# compute mutation positional bias given trinucleotide strings of the sequence (ONLY AFFECTS SNPs)
 		#
 		# note: since indels are added before snps, it's possible these positional biases aren't correctly utilized
 		#       at positions affected by indels. At the moment I'm going to consider this negligible.
-		trinuc_snp_bias  = [[0. for n in xrange(self.seqLen)] for m in xrange(self.ploidy)]
-		self.trinuc_bias = [None for n in xrange(self.ploidy)]
-		for p in xrange(self.ploidy):
-			for i in xrange(self.winBuffer+1,self.seqLen-1):
+		trinuc_snp_bias  = [[0. for n in range(self.seqLen)] for m in range(self.ploidy)]
+		self.trinuc_bias = [None for n in range(self.ploidy)]
+		for p in range(self.ploidy):
+			for i in range(self.winBuffer+1,self.seqLen-1):
 				trinuc_snp_bias[p][i] = self.models[p][7][ALL_IND[str(self.sequences[p][i-1:i+2])]]
-			self.trinuc_bias[p] = DiscreteDistribution(trinuc_snp_bias[p][self.winBuffer+1:self.seqLen-1],range(self.winBuffer+1,self.seqLen-1))
+			self.trinuc_bias[p] = DiscreteDistribution(trinuc_snp_bias[p][self.winBuffer+1:self.seqLen-1],list(range(self.winBuffer+1,self.seqLen-1)))
 
 	def update(self, xOffset, sequence, ploidy, windowOverlap, readLen, mutationModels=[], mutRate=None):
 		# if mutation model is changed, we have to reinitialize it...
@@ -261,7 +261,7 @@ class SequenceContainer:
 						splt = wps.split('|')
 					whichPloid = []
 					whichAlt   = []
-					for i in xrange(len(splt)):
+					for i in range(len(splt)):
 						if splt[i] == '1':
 							whichPloid.append(i)
 						#whichAlt.append(int(splt[i])-1)
@@ -272,19 +272,19 @@ class SequenceContainer:
 					whichAlt   = [0]
 
 			# ignore invalid ploids
-			for i in xrange(len(whichPloid)-1,-1,-1):
+			for i in range(len(whichPloid)-1,-1,-1):
 				if whichPloid[i] >= self.ploidy:
 					del whichPloid[i]
 						
-			for i in xrange(len(whichPloid)):
+			for i in range(len(whichPloid)):
 				p = whichPloid[i]
 				myAlt = inpV[2][whichAlt[i]]
 				myVar = (inpV[0]-self.x,inpV[1],myAlt)
 				inLen = max([len(inpV[1]),len(myAlt)])
 				#print myVar, chr(self.sequences[p][myVar[0]])
 				if myVar[0] < 0 or myVar[0] >= len(self.blackList[p]):
-					print '\nError: Attempting to insert variant out of window bounds:'
-					print myVar, '--> blackList[0:'+str(len(self.blackList[p]))+']\n'
+					print('\nError: Attempting to insert variant out of window bounds:')
+					print(myVar, '--> blackList[0:'+str(len(self.blackList[p]))+']\n')
 					exit(1)
 				if len(inpV[1]) == 1 and len(myAlt) == 1:
 					if self.blackList[p][myVar[0]]:
@@ -292,10 +292,10 @@ class SequenceContainer:
 					self.snpList[p].append(myVar)
 					self.blackList[p][myVar[0]] = 2
 				else:
-					for k in xrange(myVar[0],myVar[0]+inLen+1):
+					for k in range(myVar[0],myVar[0]+inLen+1):
 						if self.blackList[p][k]:
 							continue
-					for k in xrange(myVar[0],myVar[0]+inLen+1):
+					for k in range(myVar[0],myVar[0]+inLen+1):
 						self.blackList[p][k] = 1
 					self.indelList[p].append(myVar)
 
@@ -303,16 +303,16 @@ class SequenceContainer:
 		
 		#	add random indels
 		all_indels  = [[] for n in self.sequences]
-		for i in xrange(self.ploidy):
-			for j in xrange(self.indelsToAdd[i]):
+		for i in range(self.ploidy):
+			for j in range(self.indelsToAdd[i]):
 				if random.random() <= self.models[i][1]:	# insert homozygous indel
-					whichPloid = range(self.ploidy)
+					whichPloid = list(range(self.ploidy))
 				else:								# insert heterozygous indel
 					whichPloid = [self.ploidMutPrior.sample()]
 
 				# try to find suitable places to insert indels
 				eventPos = -1
-				for attempt in xrange(MAX_ATTEMPTS):
+				for attempt in range(MAX_ATTEMPTS):
 					eventPos = random.randint(self.winBuffer,self.seqLen-1)
 					for p in whichPloid:
 						if self.blackList[p][eventPos]:
@@ -325,7 +325,7 @@ class SequenceContainer:
 				if random.random() <= self.models[i][3]:	# insertion
 					inLen   = self.models[i][4].sample()
 					# sequence content of random insertions is uniformly random (change this later)
-					inSeq   = ''.join([random.choice(NUCL) for n in xrange(inLen)])
+					inSeq   = ''.join([random.choice(NUCL) for n in range(inLen)])
 					refNucl = chr(self.sequences[i][eventPos])
 					myIndel = (eventPos,refNucl,refNucl+inSeq)
 				else:										# deletion
@@ -346,34 +346,34 @@ class SequenceContainer:
 				if skipEvent:
 					continue
 				for p in whichPloid:
-					for k in xrange(eventPos,eventPos+inLen+1):
+					for k in range(eventPos,eventPos+inLen+1):
 						if self.blackList[p][k]:
 							skipEvent = True
 				if skipEvent:
 					continue
 
 				for p in whichPloid:
-					for k in xrange(eventPos,eventPos+inLen+1):
+					for k in range(eventPos,eventPos+inLen+1):
 						self.blackList[p][k] = 1
 					all_indels[p].append(myIndel)
 
-		for i in xrange(len(all_indels)):
+		for i in range(len(all_indels)):
 			all_indels[i].extend(self.indelList[i])
 		all_indels = [sorted(n,reverse=True) for n in all_indels]
 		#print all_indels
 
 		#	add random snps
 		all_snps  = [[] for n in self.sequences]
-		for i in xrange(self.ploidy):
-			for j in xrange(self.snpsToAdd[i]):
+		for i in range(self.ploidy):
+			for j in range(self.snpsToAdd[i]):
 				if random.random() <= self.models[i][1]:	# insert homozygous SNP
-					whichPloid = range(self.ploidy)
+					whichPloid = list(range(self.ploidy))
 				else:								# insert heterozygous SNP
 					whichPloid = [self.ploidMutPrior.sample()]
 
 				# try to find suitable places to insert snps
 				eventPos = -1
-				for attempt in xrange(MAX_ATTEMPTS):
+				for attempt in range(MAX_ATTEMPTS):
 					# based on the mutation model for the specified ploid, choose a SNP location based on trinuc bias
 					# (if there are multiple ploids, choose one at random)
 					if IGNORE_TRINUC:
@@ -400,31 +400,31 @@ class SequenceContainer:
 					self.blackList[p][mySNP[0]] = 2
 
 		# combine random snps with inserted snps, remove any snps that overlap indels
-		for p in xrange(len(all_snps)):
+		for p in range(len(all_snps)):
 			all_snps[p].extend(self.snpList[p])
 			all_snps[p] = [n for n in all_snps[p] if self.blackList[p][n[0]] != 1]
 
 		# modify reference sequences
-		for i in xrange(len(all_snps)):
-			for j in xrange(len(all_snps[i])):
+		for i in range(len(all_snps)):
+			for j in range(len(all_snps[i])):
 				# sanity checking (for debugging purposes)
 				vPos = all_snps[i][j][0]
 				if all_snps[i][j][1] != chr(self.sequences[i][vPos]):
-					print '\nError: Something went wrong!\n', all_snps[i][j], chr(self.sequences[i][vPos]),'\n'
+					print('\nError: Something went wrong!\n', all_snps[i][j], chr(self.sequences[i][vPos]),'\n')
 					exit(1)
 				else:
 					self.sequences[i][vPos] = all_snps[i][j][2]
 
-		adjToAdd = [[] for n in xrange(self.ploidy)]
-		for i in xrange(len(all_indels)):
-			for j in xrange(len(all_indels[i])):
+		adjToAdd = [[] for n in range(self.ploidy)]
+		for i in range(len(all_indels)):
+			for j in range(len(all_indels[i])):
 				# sanity checking (for debugging purposes)
 				vPos  = all_indels[i][j][0]
 				vPos2 = vPos + len(all_indels[i][j][1])
 				#print all_indels[i][j], str(self.sequences[i][vPos:vPos2])
 				#print len(self.sequences[i]),'-->',
 				if all_indels[i][j][1] != str(self.sequences[i][vPos:vPos2]):
-					print '\nError: Something went wrong!\n', all_indels[i][j], str(self.sequences[i][vPos:vPos2]),'\n'
+					print('\nError: Something went wrong!\n', all_indels[i][j], str(self.sequences[i][vPos:vPos2]),'\n')
 					exit(1)
 				else:
 					self.sequences[i] = self.sequences[i][:vPos] + bytearray(all_indels[i][j][2]) + self.sequences[i][vPos2:]
@@ -436,7 +436,7 @@ class SequenceContainer:
 			self.adj[i] = np.zeros(len(self.sequences[i]),dtype='<i4')
 			indSoFar = 0
 			valSoFar = 0
-			for j in xrange(len(self.adj[i])):
+			for j in range(len(self.adj[i])):
 				if indSoFar < len(adjToAdd[i]) and j >= adjToAdd[i][indSoFar][0]+1:
 					valSoFar += adjToAdd[i][indSoFar][1]
 					indSoFar += 1
@@ -460,11 +460,11 @@ class SequenceContainer:
 						tempSymbolString.append('M')
 						j += 1
 
-				for j in xrange(len(tempSymbolString)-self.readLen):
+				for j in range(len(tempSymbolString)-self.readLen):
 					self.allCigar[i].append(CigarString(listIn=tempSymbolString[j:j+self.readLen]).getString())
 					# pre-compute reference position of first matching base
 					my_fm_pos = None
-					for k in xrange(self.readLen):
+					for k in range(self.readLen):
 						if 'M' in tempSymbolString[j+k]:
 							my_fm_pos = j+k
 							break
@@ -478,9 +478,9 @@ class SequenceContainer:
 
 		# tally up variants implemented
 		countDict = {}
-		all_variants = [sorted(all_snps[i]+all_indels[i]) for i in xrange(self.ploidy)]
-		for i in xrange(len(all_variants)):
-			for j in xrange(len(all_variants[i])):
+		all_variants = [sorted(all_snps[i]+all_indels[i]) for i in range(self.ploidy)]
+		for i in range(len(all_variants)):
+			for j in range(len(all_variants[i])):
 				all_variants[i][j] = tuple([all_variants[i][j][0]+self.x])+all_variants[i][j][1:]
 				t = tuple(all_variants[i][j])
 				if t not in countDict:
@@ -494,7 +494,7 @@ class SequenceContainer:
 		output_variants = []
 		for k in sorted(countDict.keys()):
 			output_variants.append(k+tuple([len(countDict[k])/float(self.ploidy)]))
-			ploid_string = ['0' for n in xrange(self.ploidy)]
+			ploid_string = ['0' for n in range(self.ploidy)]
 			for k2 in [n for n in countDict[k]]:
 				ploid_string[k2] = '1'
 			output_variants[-1] += tuple(['WP='+'/'.join(ploid_string)])
@@ -594,11 +594,11 @@ class SequenceContainer:
 			try:
 				myCigar = self.allCigar[myPloid][r[0]]
 			except IndexError:
-				print 'Index error when attempting to find cigar string.'
-				print len(self.allCigar[myPloid]), r[0]
+				print('Index error when attempting to find cigar string.')
+				print(len(self.allCigar[myPloid]), r[0])
 				if fragLen != None:
-					print (rPos1, rPos2)
-				print myPloid, fragLen, self.fraglens_indMap[fragLen]
+					print((rPos1, rPos2))
+				print(myPloid, fragLen, self.fraglens_indMap[fragLen])
 				exit(1)
 			totalD  = sum([error[1] for error in r[2] if error[0] == 'D'])
 			totalI  = sum([error[1] for error in r[2] if error[0] == 'I'])
@@ -608,7 +608,7 @@ class SequenceContainer:
 			expandedCigar = []
 			extraCigar    = []
 			adj           = 0
-			sse_adj       = [0 for n in xrange(self.readLen + max(sequencingModel.errP[3]))]
+			sse_adj       = [0 for n in range(self.readLen + max(sequencingModel.errP[3]))]
 			anyIndelErr   = False
 
 			# sort by letter (D > I > S) such that we introduce all indel errors before substitution errors
@@ -656,10 +656,10 @@ class SequenceContainer:
 								expandedCigar.append('M')
 							expandedCigar[pi+1] = 'D'*eLen + expandedCigar[pi+1]
 						else:
-							print '\nError, ref does not match alt while attempting to insert deletion error!\n'
+							print('\nError, ref does not match alt while attempting to insert deletion error!\n')
 							exit(1)
 						adj -= eLen
-						for i in xrange(ePos,len(sse_adj)):
+						for i in range(ePos,len(sse_adj)):
 							sse_adj[i] -= eLen
 
 					# insert insertion error into read and update cigar string accordingly
@@ -669,18 +669,18 @@ class SequenceContainer:
 							r[3] = r[3][:ePos+myadj] + error[4] + r[3][ePos+myadj+1:]
 							expandedCigar = expandedCigar[:ePos+myadj] + ['I']*eLen + expandedCigar[ePos+myadj:]
 						else:
-							print '\nError, ref does not match alt while attempting to insert insertion error!\n'
-							print '---',chr(r[3][ePos+myadj]), '!=', error[3]
+							print('\nError, ref does not match alt while attempting to insert insertion error!\n')
+							print('---',chr(r[3][ePos+myadj]), '!=', error[3])
 							exit(1)
 						adj += eLen
-						for i in xrange(ePos,len(sse_adj)):
+						for i in range(ePos,len(sse_adj)):
 							sse_adj[i] += eLen
 
 				else:	# substitution errors, much easier by comparison...
 					if chr(r[3][ePos+sse_adj[ePos]]) == error[3]:
 						r[3][ePos+sse_adj[ePos]] = error[4]
 					else:
-						print '\nError, ref does not match alt while attempting to insert substitution error!\n'
+						print('\nError, ref does not match alt while attempting to insert substitution error!\n')
 						exit(1)
 
 			if anyIndelErr:
@@ -704,13 +704,13 @@ class ReadContainer:
 
 		self.readLen = readLen
 
-		errorDat = pickle.load(open(errorModel,'rb'))
+		errorDat = pickle.load(open(errorModel,'rb'), encoding='latin1')
 		self.UNIFORM = False
 		if len(errorDat) == 4:		# uniform-error SE reads (e.g. PacBio)
 			self.UNIFORM = True
 			[Qscores,offQ,avgError,errorParams] = errorDat
 			self.uniform_qscore = int(-10.*np.log10(avgError)+0.5)
-			print 'Using uniform sequencing error model. (q='+str(self.uniform_qscore)+'+'+str(offQ)+', p(err)={0:0.2f}%)'.format(100.*avgError)
+			print('Using uniform sequencing error model. (q='+str(self.uniform_qscore)+'+'+str(offQ)+', p(err)={0:0.2f}%)'.format(100.*avgError))
 		if len(errorDat) == 6:		# only 1 q-score model present, use same model for both strands
 			[initQ1,probQ1,Qscores,offQ,avgError,errorParams] = errorDat
 			self.PE_MODELS = False
@@ -719,7 +719,7 @@ class ReadContainer:
 			[initQ1,probQ1,initQ2,probQ2,Qscores,offQ,avgError,errorParams] = errorDat
 			self.PE_MODELS = True
 			if len(initQ1) != len(initQ2) or len(probQ1) != len(probQ2):
-				print '\nError: R1 and R2 quality score models are of different length.\n'
+				print('\nError: R1 and R2 quality score models are of different length.\n')
 				exit(1)
 
 
@@ -739,33 +739,33 @@ class ReadContainer:
 			self.errorScale = 1.0
 		else:
 			self.errorScale = reScaledError/avgError
-			print 'Warning: Quality scores no longer exactly representative of error probability. Error model scaled by {0:.3f} to match desired rate...'.format(self.errorScale)
+			print('Warning: Quality scores no longer exactly representative of error probability. Error model scaled by {0:.3f} to match desired rate...'.format(self.errorScale))
 
 		if self.UNIFORM == False:
 			# adjust length to match desired read length
 			if self.readLen == len(initQ1):
-				self.qIndRemap = range(self.readLen)
+				self.qIndRemap = list(range(self.readLen))
 			else:
-				print 'Warning: Read length of error model ('+str(len(initQ1))+') does not match -R value ('+str(self.readLen)+'), rescaling model...'
-				self.qIndRemap = [max([1,len(initQ1)*n/readLen]) for n in xrange(readLen)]
+				print('Warning: Read length of error model ('+str(len(initQ1))+') does not match -R value ('+str(self.readLen)+'), rescaling model...')
+				self.qIndRemap = [max([1,len(initQ1)*n/readLen]) for n in range(readLen)]
 
 			# initialize probability distributions
-			self.initDistByPos1        = [DiscreteDistribution(initQ1[i],Qscores) for i in xrange(len(initQ1))]
+			self.initDistByPos1        = [DiscreteDistribution(initQ1[i],Qscores) for i in range(len(initQ1))]
 			self.probDistByPosByPrevQ1 = [None]
-			for i in xrange(1,len(initQ1)):
+			for i in range(1,len(initQ1)):
 				self.probDistByPosByPrevQ1.append([])
-				for j in xrange(len(initQ1[0])):
+				for j in range(len(initQ1[0])):
 					if np.sum(probQ1[i][j]) <= 0.:	# if we don't have sufficient data for a transition, use the previous qscore
 						self.probDistByPosByPrevQ1[-1].append(DiscreteDistribution([1],[Qscores[j]],degenerateVal=Qscores[j]))
 					else:
 						self.probDistByPosByPrevQ1[-1].append(DiscreteDistribution(probQ1[i][j],Qscores))
 
 			if self.PE_MODELS:
-				self.initDistByPos2        = [DiscreteDistribution(initQ2[i],Qscores) for i in xrange(len(initQ2))]
+				self.initDistByPos2        = [DiscreteDistribution(initQ2[i],Qscores) for i in range(len(initQ2))]
 				self.probDistByPosByPrevQ2 = [None]
-				for i in xrange(1,len(initQ2)):
+				for i in range(1,len(initQ2)):
 					self.probDistByPosByPrevQ2.append([])
-					for j in xrange(len(initQ2[0])):
+					for j in range(len(initQ2[0])):
 						if np.sum(probQ2[i][j]) <= 0.:	# if we don't have sufficient data for a transition, use the previous qscore
 							self.probDistByPosByPrevQ2[-1].append(DiscreteDistribution([1],[Qscores[j]],degenerateVal=Qscores[j]))
 						else:
@@ -777,9 +777,9 @@ class ReadContainer:
 		sErr = []
 
 		if self.UNIFORM:
-			myQ  = [self.uniform_qscore + self.offQ for n in xrange(self.readLen)]
+			myQ  = [self.uniform_qscore + self.offQ for n in range(self.readLen)]
 			qOut = ''.join([chr(n) for n in myQ])
-			for i in xrange(self.readLen):
+			for i in range(self.readLen):
 				if random.random() < self.errorScale*self.qErrRate[self.uniform_qscore]:
 					sErr.append(i)
 		else:
@@ -790,7 +790,7 @@ class ReadContainer:
 				myQ = self.initDistByPos1[0].sample()
 			qOut[0] = myQ
 
-			for i in xrange(1,self.readLen):
+			for i in range(1,self.readLen):
 				if self.PE_MODELS and isReverseStrand:
 					myQ = self.probDistByPosByPrevQ2[self.qIndRemap[i]][myQ].sample()
 				else:
@@ -800,7 +800,7 @@ class ReadContainer:
 			if isReverseStrand:
 				qOut = qOut[::-1]
 
-			for i in xrange(self.readLen):
+			for i in range(self.readLen):
 				if random.random() < self.errorScale * self.qErrRate[qOut[i]]:
 					sErr.append(i)
 
@@ -834,19 +834,19 @@ class ReadContainer:
 				indelLen = self.errSIE.sample()
 				if random.random() < self.errP[4]:		# insertion error
 					myNucl  = chr(readData[ind])
-					newNucl = myNucl + ''.join([self.errSIN.sample() for n in xrange(indelLen)])
+					newNucl = myNucl + ''.join([self.errSIN.sample() for n in range(indelLen)])
 					sOut.append(('I',len(newNucl)-1,ind,myNucl,newNucl))
 				elif ind < self.readLen-2-nDelSoFar:	# deletion error (prevent too many of them from stacking up)
 					myNucl  = str(readData[ind:ind+indelLen+1])
 					newNucl = chr(readData[ind])
 					nDelSoFar += len(myNucl)-1
 					sOut.append(('D',len(myNucl)-1,ind,myNucl,newNucl))
-					for i in xrange(ind+1,ind+indelLen+1):
+					for i in range(ind+1,ind+indelLen+1):
 						delBlacklist.append(i)
 				prevIndel = ind
 
 		# remove blacklisted errors
-		for i in xrange(len(sOut)-1,-1,-1):
+		for i in range(len(sOut)-1,-1,-1):
 			if sOut[i][2] in delBlacklist:
 				del sOut[i]
 
@@ -866,7 +866,7 @@ def parseInputMutationModel(model=None, whichDefault=1):
 	elif whichDefault == 2:
 		outModel = [copy.deepcopy(n) for n in DEFAULT_MODEL_2]
 	else:
-		print '\nError: Unknown default mutation model specified\n'
+		print('\nError: Unknown default mutation model specified\n')
 		exit(1)
 
 	if model != None:
@@ -876,11 +876,11 @@ def parseInputMutationModel(model=None, whichDefault=1):
 
 		insList     = pickle_dict['INDEL_FREQ']
 		if len(insList):
-			insCount = sum([insList[k] for k in insList.keys() if k >= 1])
-			delCount = sum([insList[k] for k in insList.keys() if k <= -1])
+			insCount = sum([insList[k] for k in list(insList.keys()) if k >= 1])
+			delCount = sum([insList[k] for k in list(insList.keys()) if k <= -1])
 			insVals  = [k for k in sorted(insList.keys()) if k >= 1]
 			insWght  = [insList[k]/float(insCount) for k in insVals]
-			delVals  = [k for k in sorted([abs(k) for k in insList.keys() if k <= -1])]
+			delVals  = [k for k in sorted([abs(k) for k in list(insList.keys()) if k <= -1])]
 			delWght  = [insList[-k]/float(delCount) for k in delVals]
 		else:	# degenerate case where no indel stats are provided
 			insCount = 1
@@ -900,9 +900,9 @@ def parseInputMutationModel(model=None, whichDefault=1):
 			myInd   = TRI_IND[k[0][0]+k[0][2]]
 			(k1,k2) = (NUC_IND[k[0][1]],NUC_IND[k[1][1]])
 			outModel[8][myInd][k1][k2] = trinuc_trans_prob[k]
-		for i in xrange(len(outModel[8])):
-			for j in xrange(len(outModel[8][i])):
-				for l in xrange(len(outModel[8][i][j])):
+		for i in range(len(outModel[8])):
+			for j in range(len(outModel[8][i])):
+				for l in range(len(outModel[8][i][j])):
 					# if trinuc not present in input mutation model, assign it uniform probability
 					if float(sum(outModel[8][i][j])) < 1e-12:
 						outModel[8][i][j] = [0.25,0.25,0.25,0.25]
@@ -911,11 +911,11 @@ def parseInputMutationModel(model=None, whichDefault=1):
 
 		trinuc_mut_prob    = pickle_dict['TRINUC_MUT_PROB']
 		which_have_we_seen = {n:False for n in ALL_TRI}
-		trinuc_mean        = np.mean(trinuc_mut_prob.values())
-		for trinuc in trinuc_mut_prob.keys():
+		trinuc_mean        = np.mean(list(trinuc_mut_prob.values()))
+		for trinuc in list(trinuc_mut_prob.keys()):
 			outModel[9][ALL_IND[trinuc]] = trinuc_mut_prob[trinuc]
 			which_have_we_seen[trinuc]   = True
-		for trinuc in which_have_we_seen.keys():
+		for trinuc in list(which_have_we_seen.keys()):
 			if which_have_we_seen[trinuc] == False:
 				outModel[9][ALL_IND[trinuc]] = trinuc_mean
 
@@ -931,7 +931,7 @@ def parseInputMutationModel_deprecated(prefix=None, whichDefault=1):
 	elif whichDefault == 2:
 		outModel = [copy.deepcopy(n) for n in DEFAULT_MODEL_2]
 	else:
-		print '\nError: Unknown default mutation model specified\n'
+		print('\nError: Unknown default mutation model specified\n')
 		exit(1)
 
 	if prefix != None:
@@ -941,7 +941,7 @@ def parseInputMutationModel_deprecated(prefix=None, whichDefault=1):
 			'\nError: Input mutation model directory not found:',prefix,'\n'
 			exit(1)
 
-		print 'Reading in mutation model...'
+		print('Reading in mutation model...')
 		listing1 = [n for n in os.listdir(prefix) if n[-5:] == '.prob']
 		listing2 = [n for n in os.listdir(prefix) if n[-7:] == '.trinuc']
 		listing  = sorted(listing1) + sorted(listing2)
@@ -962,7 +962,7 @@ def parseInputMutationModel_deprecated(prefix=None, whichDefault=1):
 				if myIns != None and myDel != None:
 					outModel[2] = myIns + myDel
 					outModel[3] = myIns / (myIns + myDel)
-					print '-',l
+					print('-',l)
 
 			if '_insLength.prob' in l:
 				insVals = {}
@@ -972,7 +972,7 @@ def parseInputMutationModel_deprecated(prefix=None, whichDefault=1):
 				if len(insVals):
 					outModel[4] = sorted(insVals.keys())
 					outModel[5] = [insVals[n] for n in outModel[4]]
-					print '-',l
+					print('-',l)
 
 			if '_delLength.prob' in l:
 				delVals = {}
@@ -982,22 +982,22 @@ def parseInputMutationModel_deprecated(prefix=None, whichDefault=1):
 				if len(delVals):
 					outModel[6] = sorted(delVals.keys())
 					outModel[7] = [delVals[n] for n in outModel[6]]
-					print '-',l
+					print('-',l)
 
 			if '.trinuc' == l[-7:]:
 				context_ind = TRI_IND[l[-10]+l[-8]]
 				p_matrix    = [[-1,-1,-1,-1],[-1,-1,-1,-1],[-1,-1,-1,-1],[-1,-1,-1,-1]]
-				for i in xrange(len(p_matrix)):
-					for j in xrange(len(fr[i])):
+				for i in range(len(p_matrix)):
+					for j in range(len(fr[i])):
 						p_matrix[i][j] = float(fr[i][j])
 				anyNone = False
-				for i in xrange(len(p_matrix)):
-					for j in xrange(len(p_matrix[i])):
+				for i in range(len(p_matrix)):
+					for j in range(len(p_matrix[i])):
 						if p_matrix[i][j] == -1:
 							anyNone = True
 				if not anyNone:
 					outModel[8][context_ind] = copy.deepcopy(p_matrix)
-					print '-',l
+					print('-',l)
 
 	return outModel
 
@@ -1017,7 +1017,7 @@ example_matrix_1             = [[0.0, 0.15, 0.7, 0.15],
 						        [0.15, 0.0, 0.15, 0.7],
 						        [0.7, 0.15, 0.0, 0.15],
 						        [0.15, 0.7, 0.15, 0.0]]
-DEFAULT_1_TRI_FREQS          = [copy.deepcopy(example_matrix_1) for n in xrange(16)]
+DEFAULT_1_TRI_FREQS          = [copy.deepcopy(example_matrix_1) for n in range(16)]
 DEFAULT_1_TRINUC_BIAS        = [1./float(len(ALL_TRI)) for n in ALL_TRI]
 DEFAULT_MODEL_1              = [DEFAULT_1_OVERALL_MUT_RATE,
 							    DEFAULT_1_HOMOZYGOUS_FREQ,
@@ -1042,7 +1042,7 @@ example_matrix_2             = [[0.0, 0.15, 0.7, 0.15],
 						        [0.15, 0.0, 0.15, 0.7],
 						        [0.7, 0.15, 0.0, 0.15],
 						        [0.15, 0.7, 0.15, 0.0]]
-DEFAULT_2_TRI_FREQS          = [copy.deepcopy(example_matrix_2) for n in xrange(16)]
+DEFAULT_2_TRI_FREQS          = [copy.deepcopy(example_matrix_2) for n in range(16)]
 DEFAULT_2_TRINUC_BIAS        = [1./float(len(ALL_TRI)) for n in ALL_TRI]
 DEFAULT_MODEL_2              = [DEFAULT_2_OVERALL_MUT_RATE,
 							    DEFAULT_2_HOMOZYGOUS_FREQ,

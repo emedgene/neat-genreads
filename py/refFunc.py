@@ -15,10 +15,10 @@ def indexRef(refPath):
 
 	fn = None
 	if os.path.isfile(refPath+'i'):
-		print 'found index '+refPath+'i'
+		print('found index '+refPath+'i')
 		fn = refPath+'i'
 	if os.path.isfile(refPath+'.fai'):
-		print 'found index '+refPath+'.fai'
+		print('found index '+refPath+'.fai')
 		fn = refPath+'.fai'
 
 	ref_inds = []
@@ -57,7 +57,7 @@ def indexRef(refPath):
 			seqLen += len(data)-1
 	refFile.close()
 
-	print '{0:.3f} (sec)'.format(time.time()-tt)
+	print('{0:.3f} (sec)'.format(time.time()-tt))
 	return ref_inds
 
 
@@ -81,16 +81,16 @@ def readRef(refPath,ref_inds_i,N_handling,N_unknowns=True,quiet=False):
 		sys.stdout.flush()
 
 	refFile = open(refPath,'r')
-	refFile.seek(ref_inds_i[1])
-	myDat = ''.join(refFile.read(ref_inds_i[2]-ref_inds_i[1]).split('\n'))
-	myDat = bytearray(myDat.upper())
+	refFile.seek(int(ref_inds_i[1]))
+	myDat = ''.join(refFile.read(int(ref_inds_i[2])-int(ref_inds_i[1])).split('\n'))
+	myDat = myDat.upper()
 
 	# find N regions
 	# data explanation: myDat[N_atlas[0][0]:N_atlas[0][1]] = solid block of Ns
 	prevNI = 0
 	nCount = 0
 	N_atlas = []
-	for i in xrange(len(myDat)):
+	for i in range(len(myDat)):
 		if myDat[i] == ord('N') or (N_unknowns and myDat[i] not in OK_CHR_ORD):
 			if nCount == 0:
 				prevNI = i
@@ -111,7 +111,7 @@ def readRef(refPath,ref_inds_i,N_handling,N_unknowns=True,quiet=False):
 		for region in N_atlas:
 			N_info['all'].extend(region)
 			if region[1]-region[0] <= N_handling[1]:
-				for i in xrange(region[0],region[1]):
+				for i in range(region[0],region[1]):
 					myDat[i] = random.choice(ALLOWED_NUCL)
 			else:
 				N_info['big'].extend(region)
@@ -119,7 +119,7 @@ def readRef(refPath,ref_inds_i,N_handling,N_unknowns=True,quiet=False):
 		for region in N_atlas:
 			N_info['all'].extend(region)
 			if region[1]-region[0] <= N_handling[1]:
-				for i in xrange(region[0],region[1]):
+				for i in range(region[0],region[1]):
 					myDat[i] = N_handling[2]
 			else:
 				N_info['big'].extend(region)
@@ -128,14 +128,14 @@ def readRef(refPath,ref_inds_i,N_handling,N_unknowns=True,quiet=False):
 			N_info['all'].extend(region)
 			N_info['big'].extend(region)
 	else:
-		print '\nERROR: UNKNOWN N_HANDLING MODE\n'
+		print('\nERROR: UNKNOWN N_HANDLING MODE\n')
 		exit(1)
 
 	habitableRegions = []
 	if N_info['big'] == []:
 		N_info['non_N'] = [(0,len(myDat))]
 	else:
-		for i in xrange(0,len(N_info['big']),2):
+		for i in range(0,len(N_info['big']),2):
 			if i == 0:
 				habitableRegions.append((0,N_info['big'][0]))
 			else:
@@ -146,7 +146,7 @@ def readRef(refPath,ref_inds_i,N_handling,N_unknowns=True,quiet=False):
 			N_info['non_N'].append(n)
 
 	if not quiet:
-		print '{0:.3f} (sec)'.format(time.time()-tt)
+		print('{0:.3f} (sec)'.format(time.time()-tt))
 	return (myDat,N_info)
 
 #
@@ -156,7 +156,7 @@ def getAllRefRegions(refPath,ref_inds,N_handling,saveOutput=False):
 	outRegions = {}
 	fn = refPath+'.nnr'
 	if os.path.isfile(fn) and not(saveOutput):
-		print 'found list of preidentified non-N regions...'
+		print('found list of preidentified non-N regions...')
 		f = open(fn,'r')
 		for line in f:
 			splt = line.strip().split('\t')
@@ -166,14 +166,14 @@ def getAllRefRegions(refPath,ref_inds,N_handling,saveOutput=False):
 		f.close()
 		return outRegions
 	else:
-		print 'enumerating all non-N regions in reference sequence...'
-		for RI in xrange(len(ref_inds)):
+		print('enumerating all non-N regions in reference sequence...')
+		for RI in range(len(ref_inds)):
 			(refSequence,N_regions) = readRef(refPath,ref_inds[RI],N_handling,quiet=True)
 			refName = ref_inds[RI][0]
 			outRegions[refName] = [n for n in N_regions['non_N']]
 		if saveOutput:
 			f = open(fn,'w')
-			for k in outRegions.keys():
+			for k in list(outRegions.keys()):
 				for n in outRegions[k]:
 					f.write(k+'\t'+str(n[0])+'\t'+str(n[1])+'\n')
 			f.close()
@@ -185,17 +185,17 @@ def getAllRefRegions(refPath,ref_inds,N_handling,saveOutput=False):
 def partitionRefRegions(inRegions,ref_inds,myjob,njobs):
 
 	totSize = 0
-	for RI in xrange(len(ref_inds)):
+	for RI in range(len(ref_inds)):
 		refName = ref_inds[RI][0]
 		for region in inRegions[refName]:
 			totSize += region[1] - region[0]
 	sizePerJob = int(totSize/float(njobs)-0.5)
 
-	regionsPerJob = [[] for n in xrange(njobs)]
-	refsPerJob    = [{} for n in xrange(njobs)]
+	regionsPerJob = [[] for n in range(njobs)]
+	refsPerJob    = [{} for n in range(njobs)]
 	currentInd    = 0
 	currentCount  = 0
-	for RI in xrange(len(ref_inds)):
+	for RI in range(len(ref_inds)):
 		refName = ref_inds[RI][0]
 		for region in inRegions[refName]:
 			regionsPerJob[currentInd].append((refName,region[0],region[1]))
@@ -205,6 +205,6 @@ def partitionRefRegions(inRegions,ref_inds,myjob,njobs):
 				currentCount = 0
 				currentInd   = min([currentInd+1,njobs-1])
 
-	relevantRefs = refsPerJob[myjob-1].keys()
+	relevantRefs = list(refsPerJob[myjob-1].keys())
 	relevantRegs = regionsPerJob[myjob-1]
 	return (relevantRefs,relevantRegs)

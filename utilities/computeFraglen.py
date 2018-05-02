@@ -10,7 +10,7 @@
 
 import sys
 import fileinput
-import cPickle as pickle
+import pickle as pickle
 import numpy as np
 
 FILTER_MAPQUAL  = 10	# only consider reads that are mapped with at least this mapping quality
@@ -38,7 +38,7 @@ def median_deviation_from_median(countDict):
 	return quick_median(deviations)
 
 if len(sys.argv) != 1:
-	print "Usage: samtools view normal.bam | python computeFraglen.py"
+	print("Usage: samtools view normal.bam | python computeFraglen.py")
 	exit(1)
 
 all_tlens = {}
@@ -60,7 +60,7 @@ for line in fileinput.input():
 			all_tlens[myTlen] += 1
 			i += 1
 			if i%PRINT_EVERY == 0:
-				print '---',i, quick_median(all_tlens), median_deviation_from_median(all_tlens)
+				print('---',i, quick_median(all_tlens), median_deviation_from_median(all_tlens))
 				#for k in sorted(all_tlens.keys()):
 				#	print k, all_tlens[k]
 
@@ -76,13 +76,13 @@ outProbs = []
 for k in sorted(all_tlens.keys()):
 	if k > 0 and k < med + FILTER_MEDDEV_M * mdm:
 		if all_tlens[k] >= FILTER_MINREADS:
-			print k, all_tlens[k]
+			print(k, all_tlens[k])
 			outVals.append(k)
 			outProbs.append(all_tlens[k])
 countSum = float(sum(outProbs))
 outProbs = [n/countSum for n in outProbs]
 
-print '\nsaving model...'
+print('\nsaving model...')
 pickle.dump([outVals, outProbs],open('fraglen.p','wb'))
 
 

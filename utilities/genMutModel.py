@@ -15,10 +15,10 @@ sys.path.append(SIM_PATH+'/py/')
 
 from refFunc import indexRef
 
-REF_WHITELIST =  [str(n) for n in xrange(1,30)] + ['x','y','X','Y','mt','Mt','MT']
+REF_WHITELIST =  [str(n) for n in range(1,30)] + ['x','y','X','Y','mt','Mt','MT']
 REF_WHITELIST += ['chr'+n for n in REF_WHITELIST]
 VALID_NUCL    =  ['A','C','G','T']
-VALID_TRINUC  =  [VALID_NUCL[i]+VALID_NUCL[j]+VALID_NUCL[k] for i in xrange(len(VALID_NUCL)) for j in xrange(len(VALID_NUCL)) for k in xrange(len(VALID_NUCL))]
+VALID_TRINUC  =  [VALID_NUCL[i]+VALID_NUCL[j]+VALID_NUCL[k] for i in range(len(VALID_NUCL)) for j in range(len(VALID_NUCL)) for k in range(len(VALID_NUCL))]
 # if parsing a dbsnp vcf, and no CAF= is found in info tag, use this as default val for population freq
 VCF_DEFAULT_POP_FREQ = 0.00001
 
@@ -30,7 +30,7 @@ VCF_DEFAULT_POP_FREQ = 0.00001
 
 # given a reference index, grab the sequence string of a specified reference
 def getChrFromFasta(refPath,ref_inds,chrName):
-	for i in xrange(len(ref_inds)):
+	for i in range(len(ref_inds)):
 		if ref_inds[i][0] == chrName:
 			ref_inds_i = ref_inds[i]
 			break
@@ -75,8 +75,8 @@ def getBedTracks(fn):
 
 def getTrackLen(trackDict):
 	totSum = 0
-	for k in trackDict.keys():
-		for i in xrange(0,len(trackDict[k]),2):
+	for k in list(trackDict.keys()):
+		for i in range(0,len(trackDict[k]),2):
 			totSum += trackDict[k][i+1] - trackDict[k][i] + 1
 	return totSum
 
@@ -139,10 +139,10 @@ args = parser.parse_args()
 
 MYBED = None
 if args.bi != None:
-	print 'only considering variants in specified bed regions...'
+	print('only considering variants in specified bed regions...')
 	MYBED = (getBedTracks(args.bi),True)
 elif args.be != None:
-	print 'only considering variants outside of specified bed regions...'
+	print('only considering variants outside of specified bed regions...')
 	MYBED = (getBedTracks(args.be),False)
 
 if TSV[-4:] == '.vcf':
@@ -150,7 +150,7 @@ if TSV[-4:] == '.vcf':
 elif TSV[-4:] == '.tsv':
 	IS_VCF = False
 else:
-	print '\nError: Unknown format for mutation input.\n'
+	print('\nError: Unknown format for mutation input.\n')
 	exit(1)
 
 
@@ -189,10 +189,10 @@ def main():
 	for refName in refList:
 
 		if (refName not in REF_WHITELIST) and (not NO_WHITELIST):
-			print refName,'is not in our whitelist, skipping...'
+			print(refName,'is not in our whitelist, skipping...')
 			continue
 
-		print 'reading reference "'+refName+'"...'
+		print('reading reference "'+refName+'"...')
 		refSequence = getChrFromFasta(REF,ref_inds,refName).upper()
 		TOTAL_REFLEN += len(refSequence) - refSequence.count('N')
 
@@ -207,7 +207,7 @@ def main():
 
 		if MYBED != None:
 			if printBedWarning:
-				print "since you're using a bed input, we have to count trinucs in bed region even if you specified a trinuc count file for the reference..."
+				print("since you're using a bed input, we have to count trinucs in bed region even if you specified a trinuc count file for the reference...")
 				printBedWarning = False
 			if refName in MYBED[0]:
 				refKey = refName
@@ -216,9 +216,9 @@ def main():
 			elif ('chr' not in refName) and (refName not in MYBED[0]) and ('chr'+refName in MYBED[0]):
 				refKey = 'chr'+refName
 			if refKey in MYBED[0]:
-				subRegions = [(MYBED[0][refKey][n],MYBED[0][refKey][n+1]) for n in xrange(0,len(MYBED[0][refKey]),2)]
+				subRegions = [(MYBED[0][refKey][n],MYBED[0][refKey][n+1]) for n in range(0,len(MYBED[0][refKey]),2)]
 				for sr in subRegions:
-					for i in xrange(sr[0],sr[1]+1-2):
+					for i in range(sr[0],sr[1]+1-2):
 						trinuc = refSequence[i:i+3]
 						if not trinuc in VALID_TRINUC:
 							continue	# skip if trinuc contains invalid characters, or not in specified bed region
@@ -227,10 +227,10 @@ def main():
 						TRINUC_BED_COUNT[trinuc] += 1
 
 		if not os.path.isfile(REF+'.trinucCounts'):
-			print 'counting trinucleotides in reference...'
-			for i in xrange(len(refSequence)-2):
+			print('counting trinucleotides in reference...')
+			for i in range(len(refSequence)-2):
 				if i%1000000 == 0 and i > 0:
-					print i,'/',len(refSequence)
+					print(i,'/',len(refSequence))
 					#break
 				trinuc = refSequence[i:i+3]
 				if not trinuc in VALID_TRINUC:
@@ -239,7 +239,7 @@ def main():
 					TRINUC_REF_COUNT[trinuc] = 0
 				TRINUC_REF_COUNT[trinuc] += 1
 		else:
-			print 'skipping trinuc counts (for whole reference) because we found a file...'
+			print('skipping trinuc counts (for whole reference) because we found a file...')
 
 
 		""" ##########################################################################
@@ -247,7 +247,7 @@ def main():
 		########################################################################## """
 
 
-		print 'reading input variants...'
+		print('reading input variants...')
 		f = open(TSV,'r')
 		isFirst = True
 		for line in f:
@@ -287,7 +287,7 @@ def main():
 
 			# if we encounter a multi-np (i.e. 3 nucl --> 3 different nucl), let's skip it for now...
 			if ('-' not in allele_normal and '-' not in allele_tumor) and (len(allele_normal) > 1 or len(allele_tumor) > 1):
-				print 'skipping a complex variant...'
+				print('skipping a complex variant...')
 				continue
 
 			# to deal with '1' vs 'chr1' references, manually change names. this is hacky and bad.
@@ -344,7 +344,7 @@ def main():
 						VDAT_COMMON.append((chrStart,allele_ref,allele_normal,allele_tumor))
 						TOTAL_DONORS[donor_id] = True
 				else:
-					print '\nError: ref allele in variant call does not match reference.\n'
+					print('\nError: ref allele in variant call does not match reference.\n')
 					exit(1)
 
 			# now let's look for indels...
@@ -372,7 +372,7 @@ def main():
 
 		# if we didn't find anything, skip ahead along to the next reference sequence
 		if not len(VDAT_COMMON):
-			print 'Found no variants for this reference, moving along...'
+			print('Found no variants for this reference, moving along...')
 			continue
 
 		#
@@ -388,7 +388,7 @@ def main():
 		else:
 			N_DONORS = len(TOTAL_DONORS)
 			VDAT_COMMON = list_2_countDict(VDAT_COMMON)
-			minVal = int(np.percentile(VDAT_COMMON.values(),percentile_var))
+			minVal = int(np.percentile(list(VDAT_COMMON.values()),percentile_var))
 			for k in sorted(VDAT_COMMON.keys()):
 				if VDAT_COMMON[k] >= minVal:
 					COMMON_VARIANTS.append((refName,k[0],k[1],k[3],VDAT_COMMON[k]/float(N_DONORS)))
@@ -400,9 +400,9 @@ def main():
 		percentile_clust = 97
 		qptn             = 1000
 		# identify regions with disproportionately more variants in them
-		VARIANT_POS = sorted([n[0] for n in VDAT_COMMON.keys()])
+		VARIANT_POS = sorted([n[0] for n in list(VDAT_COMMON.keys())])
 		clustered_pos = clusterList(VARIANT_POS,dist_thresh)
-		byLen  = [(len(clustered_pos[i]),min(clustered_pos[i]),max(clustered_pos[i]),i) for i in xrange(len(clustered_pos))]
+		byLen  = [(len(clustered_pos[i]),min(clustered_pos[i]),max(clustered_pos[i]),i) for i in range(len(clustered_pos))]
 		#byLen  = sorted(byLen,reverse=True)
 		#minLen = int(np.percentile([n[0] for n in byLen],percentile_clust))
 		#byLen  = [n for n in byLen if n[0] >= minLen]
@@ -416,7 +416,7 @@ def main():
 			if n[0] >= minVal:
 				HIGH_MUT_REGIONS.append((refName,n[1],n[2],n[0]))
 		# collapse overlapping regions
-		for i in xrange(len(HIGH_MUT_REGIONS)-1,0,-1):
+		for i in range(len(HIGH_MUT_REGIONS)-1,0,-1):
 			if HIGH_MUT_REGIONS[i-1][2] >= HIGH_MUT_REGIONS[i][1] and HIGH_MUT_REGIONS[i-1][0] == HIGH_MUT_REGIONS[i][0]:
 				avgMutRate = 0.5*HIGH_MUT_REGIONS[i-1][3]+0.5*HIGH_MUT_REGIONS[i][3]	# not accurate, but I'm lazy
 				HIGH_MUT_REGIONS[i-1] = (HIGH_MUT_REGIONS[i-1][0], HIGH_MUT_REGIONS[i-1][1], HIGH_MUT_REGIONS[i][2], avgMutRate)
@@ -426,7 +426,7 @@ def main():
 	# if we didn't count ref trinucs because we found file, read in ref counts from file now
 	#
 	if os.path.isfile(REF+'.trinucCounts'):
-		print 'reading pre-computed trinuc counts...'
+		print('reading pre-computed trinuc counts...')
 		f = open(REF+'.trinucCounts','r')
 		for line in f:
 			splt = line.strip().split('\t')
@@ -435,9 +435,9 @@ def main():
 	# otherwise, save trinuc counts to file, if desired
 	elif SAVE_TRINUC:
 		if MYBED != None:
-			print 'unable to save trinuc counts to file because using input bed region...'
+			print('unable to save trinuc counts to file because using input bed region...')
 		else:
-			print 'saving trinuc counts to file...'
+			print('saving trinuc counts to file...')
 			f = open(REF+'.trinucCounts','w')
 			for trinuc in sorted(TRINUC_REF_COUNT.keys()):
 				f.write(trinuc+'\t'+str(TRINUC_REF_COUNT[trinuc])+'\n')
@@ -450,14 +450,14 @@ def main():
 		if MYBED[1] == True:	# we are restricting our attention to bed regions, so ONLY use bed region trinuc counts
 			TRINUC_REF_COUNT = TRINUC_BED_COUNT
 		else:					# we are only looking outside bed regions, so subtract bed region trinucs from entire reference trinucs
-			for k in TRINUC_REF_COUNT.keys():
+			for k in list(TRINUC_REF_COUNT.keys()):
 				if k in TRINUC_BED_COUNT:
 					TRINUC_REF_COUNT[k] -= TRINUC_BED_COUNT[k]
 
 	# if for some reason we didn't find any valid input variants, exit gracefully...
 	totalVar = SNP_COUNT + sum(INDEL_COUNT.values())
 	if totalVar == 0:
-		print '\nError: No valid variants were found, model could not be created. (Are you using the correct reference?)\n'
+		print('\nError: No valid variants were found, model could not be created. (Are you using the correct reference?)\n')
 		exit(1)
 
 	""" ##########################################################################
@@ -498,7 +498,7 @@ def main():
 	# compute average snp and indel frequencies
 	SNP_FREQ       = SNP_COUNT/float(totalVar)
 	AVG_INDEL_FREQ = 1.-SNP_FREQ
-	INDEL_FREQ     = {k:(INDEL_COUNT[k]/float(totalVar))/AVG_INDEL_FREQ for k in INDEL_COUNT.keys()}
+	INDEL_FREQ     = {k:(INDEL_COUNT[k]/float(totalVar))/AVG_INDEL_FREQ for k in list(INDEL_COUNT.keys())}
 	if MYBED != None:
 		if MYBED[1] == True:
 			AVG_MUT_RATE = totalVar/float(getTrackLen(MYBED[0]))
@@ -521,25 +521,25 @@ def main():
 				TRINUC_TRANS_PROBS[(trinuc,trinuc2)] = 0.
 				printTrinucWarning = True
 	if printTrinucWarning:
-		print 'Warning: Some trinucleotides transitions were not encountered in the input dataset, probabilities of 0.0 have been assigned to these events.'
+		print('Warning: Some trinucleotides transitions were not encountered in the input dataset, probabilities of 0.0 have been assigned to these events.')
 
 	#
 	#	print some stuff
 	#
 	for k in sorted(TRINUC_MUT_PROB.keys()):
-		print 'p('+k+' mutates) =',TRINUC_MUT_PROB[k]
+		print('p('+k+' mutates) =',TRINUC_MUT_PROB[k])
 
 	for k in sorted(TRINUC_TRANS_PROBS.keys()):
-		print 'p('+k[0]+' --> '+k[1]+' | '+k[0]+' mutates) =',TRINUC_TRANS_PROBS[k]
+		print('p('+k[0]+' --> '+k[1]+' | '+k[0]+' mutates) =',TRINUC_TRANS_PROBS[k])
 
 	for k in sorted(INDEL_FREQ.keys()):
 		if k > 0:
-			print 'p(ins length = '+str(abs(k))+' | indel occurs) =',INDEL_FREQ[k]
+			print('p(ins length = '+str(abs(k))+' | indel occurs) =',INDEL_FREQ[k])
 		else:
-			print 'p(del length = '+str(abs(k))+' | indel occurs) =',INDEL_FREQ[k]
+			print('p(del length = '+str(abs(k))+' | indel occurs) =',INDEL_FREQ[k])
 
 	for k in sorted(SNP_TRANS_FREQ.keys()):
-		print 'p('+k[0]+' --> '+k[1]+' | SNP occurs) =',SNP_TRANS_FREQ[k]
+		print('p('+k[0]+' --> '+k[1]+' | SNP occurs) =',SNP_TRANS_FREQ[k])
 
 	#for n in COMMON_VARIANTS:
 	#	print n
@@ -547,10 +547,10 @@ def main():
 	#for n in HIGH_MUT_REGIONS:
 	#	print n
 
-	print 'p(snp)   =',SNP_FREQ
-	print 'p(indel) =',AVG_INDEL_FREQ
-	print 'overall average mut rate:',AVG_MUT_RATE
-	print 'total variants processed:',totalVar
+	print('p(snp)   =',SNP_FREQ)
+	print('p(indel) =',AVG_INDEL_FREQ)
+	print('overall average mut rate:',AVG_MUT_RATE)
+	print('total variants processed:',totalVar)
 
 	#
 	# save variables to file
