@@ -697,10 +697,10 @@ def main():
 						# if read (or read + mate for PE) are unmapped, put them at end of bam file
 						if all(isUnmapped):
 							if PAIRED_END:
-								unmapped_records.append((myReadName+'/1',myReadData[0],109))
-								unmapped_records.append((myReadName+'/2',myReadData[1],157))
+								unmapped_records.append((myReadName, myReadData[0],109))
+								unmapped_records.append((myReadName, myReadData[1],157))
 							else:
-								unmapped_records.append((myReadName+'/1',myReadData[0],4))
+								unmapped_records.append((myReadName, myReadData[0],4))
 
 						# write read data out to FASTQ and BAM files, bypass FASTQ if option specified
 						myRefIndex = indices_by_refName[refIndex[RI][0]]
@@ -709,20 +709,20 @@ def main():
 								OFW.writeFASTQRecord(myReadName,myReadData[0][2],myReadData[0][3])
 							if SAVE_BAM:
 								if isUnmapped[0] == False:
-									OFW.writeBAMRecord(myRefIndex, myReadName+'/1', myReadData[0][0], myReadData[0][1], myReadData[0][2], myReadData[0][3], samFlag=0)
+									OFW.writeBAMRecord(myRefIndex, myReadName, myReadData[0][0], myReadData[0][1], myReadData[0][2], myReadData[0][3], samFlag=0)
 						elif len(myReadData) == 2:
 							if NO_FASTQ != True:
 								OFW.writeFASTQRecord(myReadName,myReadData[0][2],myReadData[0][3],read2=myReadData[1][2],qual2=myReadData[1][3])
 							if SAVE_BAM:
 								if isUnmapped[0] == False and isUnmapped[1] == False:
-									OFW.writeBAMRecord(myRefIndex, myReadName+'/1', myReadData[0][0], myReadData[0][1], myReadData[0][2], myReadData[0][3], samFlag=99,  matePos=myReadData[1][0])
-									OFW.writeBAMRecord(myRefIndex, myReadName+'/2', myReadData[1][0], myReadData[1][1], myReadData[1][2], myReadData[1][3], samFlag=147, matePos=myReadData[0][0])
+									OFW.writeBAMRecord(myRefIndex, myReadName, myReadData[0][0], myReadData[0][1], myReadData[0][2], myReadData[0][3], samFlag=99,  matePos=myReadData[1][0])
+									OFW.writeBAMRecord(myRefIndex, myReadName, myReadData[1][0], myReadData[1][1], myReadData[1][2], myReadData[1][3], samFlag=147, matePos=myReadData[0][0])
 								elif isUnmapped[0] == False and isUnmapped[1] == True:
-									OFW.writeBAMRecord(myRefIndex, myReadName+'/1', myReadData[0][0], myReadData[0][1], myReadData[0][2], myReadData[0][3], samFlag=105,  matePos=myReadData[0][0])
-									OFW.writeBAMRecord(myRefIndex, myReadName+'/2', myReadData[0][0], myReadData[1][1], myReadData[1][2], myReadData[1][3], samFlag=149, matePos=myReadData[0][0], alnMapQual=0)
+									OFW.writeBAMRecord(myRefIndex, myReadName, myReadData[0][0], myReadData[0][1], myReadData[0][2], myReadData[0][3], samFlag=105,  matePos=myReadData[0][0])
+									OFW.writeBAMRecord(myRefIndex, myReadName, myReadData[0][0], myReadData[1][1], myReadData[1][2], myReadData[1][3], samFlag=149, matePos=myReadData[0][0], alnMapQual=0)
 								elif isUnmapped[0] == True and isUnmapped[1] == False:
-									OFW.writeBAMRecord(myRefIndex, myReadName+'/1', myReadData[1][0], myReadData[0][1], myReadData[0][2], myReadData[0][3], samFlag=101,  matePos=myReadData[1][0], alnMapQual=0)
-									OFW.writeBAMRecord(myRefIndex, myReadName+'/2', myReadData[1][0], myReadData[1][1], myReadData[1][2], myReadData[1][3], samFlag=153, matePos=myReadData[1][0])
+									OFW.writeBAMRecord(myRefIndex, myReadName, myReadData[1][0], myReadData[0][1], myReadData[0][2], myReadData[0][3], samFlag=101,  matePos=myReadData[1][0], alnMapQual=0)
+									OFW.writeBAMRecord(myRefIndex, myReadName, myReadData[1][0], myReadData[1][1], myReadData[1][2], myReadData[1][3], samFlag=153, matePos=myReadData[1][0])
 						else:
 							print '\nError: Unexpected number of reads generated...\n'
 							exit(1)
